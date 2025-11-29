@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YKS Geri Sayım</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              bg: {
+                dark: '#121212',
+                light: '#f8f9fa',
+              },
+              card: {
+                dark: '#1e1e1e',
+                light: '#ffffff',
+              },
+              text: {
+                dark: '#e0e0e0',
+                light: '#212121',
+              },
+              accent: {
+                DEFAULT: 'var(--color-accent)',
+                hover: 'var(--color-accent-hover)',
+              }
+            },
+            animation: {
+              'gradient-x': 'gradient-x 10s ease infinite',
+            },
+            keyframes: {
+              'gradient-x': {
+                '0%': {
+                  'background-size': '400% 400%',
+                  'background-position': '0% 50%'
+                },
+                '50%': {
+                  'background-size': '400% 400%',
+                  'background-position': '100% 50%'
+                },
+                '100%': {
+                  'background-size': '400% 400%',
+                  'background-position': '0% 50%'
+                },
+              },
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      :root {
+        --color-accent: #3b82f6;
+        --color-accent-hover: #2563eb;
+      }
+      /* Custom scrollbar for settings panel */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+</head>
+  <body class="bg-bg-light text-text-light dark:bg-bg-dark dark:text-text-dark transition-colors duration-300 antialiased overflow-x-hidden">
+    <div id="root"></div>
+  </body>
+</html>

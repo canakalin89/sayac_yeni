@@ -1,0 +1,5 @@
+{
+  "name": "YKS Geri Sayım",
+  "description": "Yükseköğretim Kurumları Sınavı (YKS) için özelleştirilebilir geri sayım ve takip uygulaması. TYT, AYT ve YDT sınavları için sayaçlar, ilerleme durumu ve okul bilgileri içerir.",
+  "requestFramePermissions": []
+}
