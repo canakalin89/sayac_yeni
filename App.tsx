@@ -179,8 +179,13 @@ const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto py-8 text-center text-sm opacity-50 border-t border-gray-200 dark:border-white/5">
-        <p>&copy; {new Date().getFullYear()} {settings.school.title}. Tüm hakları saklıdır.</p>
+      <footer className="mt-auto py-8 text-center text-sm border-t border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-black/20">
+        <div className="container mx-auto flex flex-col items-center justify-center space-y-2">
+            <p className="opacity-70">{settings.school.title}</p>
+            <p className="font-bold text-accent text-base tracking-wide">
+                Tasarım ve Kodlama: <a href="https://instagram.com/can_akalin" target="_blank" rel="noreferrer" className="hover:underline hover:text-accent-hover transition-colors">Can AKALIN</a>
+            </p>
+        </div>
       </footer>
 
       {/* Floating Settings Button */}

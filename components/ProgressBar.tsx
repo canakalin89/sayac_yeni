@@ -31,7 +31,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ startDate, endDate }) => {
       
       <div className="h-3 w-full bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
         <div 
-          className="h-full rounded-full bg-gradient-to-r from-blue-400 via-blue-600 to-blue-400 bg-[length:200%_100%] animate-gradient-x transition-all duration-700 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+          className="h-full rounded-full bg-gradient-to-r from-accent via-accent-hover to-accent bg-[length:200%_100%] animate-gradient-x transition-all duration-700 ease-out shadow-[0_0_10px_var(--color-accent)]"
           style={{ width: `${percentage}%` }}
         />
       </div>
