@@ -1,20 +1,99 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🎓 YKS Geri Sayım ve Takip Uygulaması
 
-# Run and deploy your AI Studio app
+Bu proje, Yükseköğretim Kurumları Sınavı (YKS) ve diğer akademik sınavlar için geliştirilmiş, tamamen özelleştirilebilir, modern ve şık bir geri sayım uygulamasıdır. Okullar, eğitim kurumları veya bireysel öğrenciler için motivasyon ve takip aracı olarak tasarlanmıştır.
 
-This contains everything you need to run your app locally.
+> **Tasarım ve Kodlama:** [Can AKALIN](https://instagram.com/can_akalin)
 
-View your app in AI Studio: https://ai.studio/apps/drive/1UbXj6UGB1MrwrJW9ye9hhrcB39OUGBrR
+## ✨ Özellikler
 
-## Run Locally
+Bu uygulama sadece basit bir sayaç değil, detaylı bir takip sistemidir:
 
-**Prerequisites:**  Node.js
+*   **Dinamik Sınav Yönetimi:**
+    *   İstediğiniz kadar sınav (TYT, AYT, YDT, LGS, Bursluluk vb.) ekleyebilirsiniz.
+    *   Sınavları gizleyebilir, silebilir veya isimlerini değiştirebilirsiniz.
+    *   Her sınavın kendine ait bir **İlerleme Çubuğu** bulunur.
+*   **Gelişmiş Görsel Özelleştirme:**
+    *   **Koyu / Açık Mod** desteği.
+    *   **6 Farklı Renk Teması** (Mavi, Kırmızı, Yeşil, Mor, Turuncu, Pembe).
+    *   Tüm renkler ve gölgeler seçilen temaya göre otomatik güncellenir.
+*   **Kurumsal Kimlik Entegrasyonu:**
+    *   Okul Adı, Alt Başlık ve Açıklama metinleri düzenlenebilir.
+    *   **Okul Logosu:** URL üzerinden logo eklenebilir. Logoya tıklandığında okulun web sitesine yönlendirir.
+*   **Sosyal Medya ve İletişim:**
+    *   Instagram, Twitter (X), YouTube, Web Sitesi ve Telefon butonları.
+    *   Bu butonlar dinamik olarak eklenip çıkarılabilir, sıralaması değiştirilebilir.
+*   **Genel İlerleme Durumu:**
+    *   Eğitim öğretim yılına veya belirlediğiniz tarih aralığına göre genel yüzdelik ilerleme çubuğu.
+*   **Ziyaretçi Sayacı:**
+    *   Veritabanı gerektirmeyen, API tabanlı (CounterAPI) ve kurum ismine özel çalışan canlı ziyaretçi sayacı.
+*   **Kalıcı Ayarlar:**
+    *   Yapılan tüm değişiklikler tarayıcının `LocalStorage` biriminde saklanır. Sayfa yenilendiğinde ayarlar kaybolmaz.
 
+## 🛠 Kullanılan Teknolojiler
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Proje, modern web geliştirme standartlarına uygun olarak, performans ve temiz kod prensipleriyle geliştirilmiştir:
+
+*   **React (v18+):** Kullanıcı arayüzü kütüphanesi.
+*   **TypeScript:** Tip güvenliği ve hatasız kod yapısı için.
+*   **Tailwind CSS:** Hızlı, modern ve responsive (mobil uyumlu) tasarım.
+*   **Vite:** Hızlı geliştirme ve derleme (build) aracı.
+*   **CounterAPI:** Backend gerektirmeyen ziyaretçi sayacı servisi.
+
+## 🚀 Kurulum ve Çalıştırma
+
+Bu projeyi kendi bilgisayarınızda çalıştırmak veya geliştirmek için aşağıdaki adımları izleyin:
+
+### Gereksinimler
+*   Node.js (v16 veya üzeri)
+
+### Adımlar
+
+1.  **Projeyi Klonlayın:**
+    ```bash
+    git clone https://github.com/kullaniciadi/yks-geri-sayim.git
+    cd yks-geri-sayim
+    ```
+
+2.  **Bağımlılıkları Yükleyin:**
+    ```bash
+    npm install
+    ```
+
+3.  **Geliştirme Sunucusunu Başlatın:**
+    ```bash
+    npm run dev
+    ```
+    Tarayıcınızda `http://localhost:5173` adresine giderek uygulamayı görebilirsiniz.
+
+## 📦 Yayına Alma (Deployment)
+
+Proje statik bir web sitesi olarak çalışır. Netlify, Vercel veya GitHub Pages üzerinde kolayca yayınlayabilirsiniz.
+
+**Build (Derleme) Almak İçin:**
+```bash
+npm run build
+```
+Bu komut `dist` klasörü oluşturur. Bu klasörün içindeki dosyaları sunucunuza yükleyebilirsiniz.
+
+**Netlify İçin:**
+Projeyi GitHub'a yükledikten sonra Netlify'a bağlamanız yeterlidir. Sistem otomatik olarak `vite.config.ts` ayarlarını algılayacaktır.
+
+## ⚙️ Kullanım Kılavuzu
+
+Uygulama açıldığında sağ alt köşedeki **Ayarlar (Dişli Çark)** ikonuna tıklayarak yönetim panelini açabilirsiniz:
+
+1.  **Görünüm:** Temayı (Koyu/Açık) ve ana rengi değiştirin.
+2.  **Okul Bilgileri:** Okul ismini, açıklamasını ve logo URL'sini girin.
+3.  **Genel İlerleme:** Dönem başlangıç ve bitiş tarihlerini ayarlayın.
+4.  **Sosyal Medya:** "Ekle" butonu ile yeni linkler ekleyin, göz ikonu ile gizleyin veya çöp kutusu ile silin.
+5.  **Sayaçlar:** Sınav adını, tarihini ve başlangıç tarihini (ilerleme çubuğu için) girin.
+
+## 👨‍💻 Geliştirici
+
+Bu proje **Can AKALIN** tarafından tasarlanmış ve kodlanmıştır.
+
+*   **Instagram:** [@can_akalin](https://instagram.com/can_akalin)
+
+## 📄 Lisans
+
+Bu proje eğitim amaçlıdır ve açık kaynak olarak paylaşılmıştır. İstenildiği gibi geliştirilebilir ve kullanılabilir.
