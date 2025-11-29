@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 
 interface ProgressBarProps {
+  title: string;
   startDate: string;
   endDate: string;
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({ startDate, endDate }) => {
+const ProgressBar: React.FC<ProgressBarProps> = ({ title, startDate, endDate }) => {
   const percentage = useMemo(() => {
     const start = new Date(startDate).getTime();
     const end = new Date(endDate).getTime();
@@ -24,7 +25,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ startDate, endDate }) => {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold flex items-center">
           <span className="w-2 h-2 rounded-full bg-accent mr-2"></span>
-          YKS Serüveni İlerleme Durumu
+          {title}
         </h3>
         <span className="text-lg font-bold text-accent">{percentage.toFixed(2)}%</span>
       </div>

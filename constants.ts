@@ -1,3 +1,4 @@
+
 import { AppSettings } from './types';
 
 export const THEME_COLORS = {
@@ -18,13 +19,45 @@ export const DEFAULT_SETTINGS: AppSettings = {
     description: "Tekirdağ Kapaklı'da yer alan ve adını Nobel ödüllü bilim insanı Prof. Dr. Aziz Sancar'dan alan okulumuz, akademik başarıyı sosyal sorumlulukla harmanlayan bir eğitim vizyonuna sahiptir.",
     logoUrl: 'https://azizsancaranadolu.meb.k12.tr/meb_iys_dosyalar/59/11/765062/dosyalar/2025_06/04182832_logolar7.png',
   },
-  social: {
-    instagram: '@asalkapakli2019',
-    twitter: '@asalkapakli2019',
-    youtube: '@AzizSancarAnadoluLisesi',
-    phone: '0282 502 2728',
-  },
+  socialLinks: [
+    {
+      id: '1',
+      platform: 'website',
+      url: 'https://azizsancaranadolu.meb.k12.tr/',
+      label: 'Web Sitesi',
+      isVisible: true,
+    },
+    {
+      id: '2',
+      platform: 'instagram',
+      url: '@asalkapakli2019',
+      label: 'Instagram',
+      isVisible: true,
+    },
+    {
+      id: '3',
+      platform: 'twitter',
+      url: '@asalkapakli2019',
+      label: 'Twitter/X',
+      isVisible: true,
+    },
+    {
+      id: '4',
+      platform: 'youtube',
+      url: '@AzizSancarAnadoluLisesi',
+      label: 'YouTube',
+      isVisible: true,
+    },
+    {
+      id: '5',
+      platform: 'phone',
+      url: '0282 502 2728',
+      label: 'Telefon',
+      isVisible: true,
+    }
+  ],
   dates: {
+    title: 'YKS Serüveni İlerleme Durumu',
     start: '2025-09-01',
     end: '2026-06-20',
   },
@@ -32,6 +65,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     {
       id: '1',
       name: 'TYT',
+      startDate: '2025-09-01',
       date: '2026-06-20',
       startTime: '10:15',
       endTime: '13:00',
@@ -40,6 +74,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     {
       id: '2',
       name: 'AYT',
+      startDate: '2025-09-01',
       date: '2026-06-21',
       startTime: '10:15',
       endTime: '13:15',
@@ -48,6 +83,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     {
       id: '3',
       name: 'YDT',
+      startDate: '2025-09-01',
       date: '2026-06-21',
       startTime: '15:45',
       endTime: '17:45',

@@ -1,16 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { TimeLeft } from '../types';
 
 interface CountdownCardProps {
   title: string;
+  startDate: string;
   date: string;
   startTime: string;
   endTime: string;
 }
 
-const CountdownCard: React.FC<CountdownCardProps> = ({ title, date, startTime, endTime }) => {
+const CountdownCard: React.FC<CountdownCardProps> = ({ title, startDate, date, startTime, endTime }) => {
+  // Countdown Logic
   const calculateTimeLeft = useCallback((): TimeLeft => {
-    // Construct the full ISO string for accurate parsing
     const targetDateTime = new Date(`${date}T${startTime}:00`).getTime();
     const now = new Date().getTime();
     const difference = targetDateTime - now;
@@ -37,6 +39,23 @@ const CountdownCard: React.FC<CountdownCardProps> = ({ title, date, startTime, e
 
     return () => clearInterval(timer);
   }, [calculateTimeLeft]);
+
+  // Progress Bar Logic
+  const percentage = useMemo(() => {
+    const start = new Date(startDate).getTime();
+    const target = new Date(`${date}T${startTime}:00`).getTime();
+    const now = new Date().getTime();
+
+    if (now < start) return 0;
+    if (now > target) return 100;
+
+    const totalDuration = target - start;
+    const elapsed = now - start;
+    
+    if (totalDuration <= 0) return 100;
+
+    return Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+  }, [startDate, date, startTime]);
 
   const digits = [
     { label: 'GÜN', value: timeLeft.days },
@@ -65,16 +84,32 @@ const CountdownCard: React.FC<CountdownCardProps> = ({ title, date, startTime, e
                <span className="text-xl font-bold text-green-500">Sınav Başladı veya Tamamlandı!</span>
            </div>
         ) : (
-            <div className="grid grid-cols-4 gap-2 sm:gap-4">
-            {digits.map((item, index) => (
-                <div key={index} className="flex flex-col items-center">
-                <div className="w-full aspect-square max-w-[80px] flex items-center justify-center bg-blue-500/10 dark:bg-blue-500/20 text-accent text-lg sm:text-2xl md:text-3xl font-bold rounded-lg mb-2 shadow-inner border border-blue-500/10">
-                    {String(item.value).padStart(2, '0')}
+            <>
+                <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-6">
+                {digits.map((item, index) => (
+                    <div key={index} className="flex flex-col items-center">
+                    <div className="w-full aspect-square max-w-[80px] flex items-center justify-center bg-blue-500/10 dark:bg-blue-500/20 text-accent text-lg sm:text-2xl md:text-3xl font-bold rounded-lg mb-2 shadow-inner border border-blue-500/10">
+                        {String(item.value).padStart(2, '0')}
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-semibold uppercase opacity-60 tracking-wider">{item.label}</span>
+                    </div>
+                ))}
                 </div>
-                <span className="text-[10px] sm:text-xs font-semibold uppercase opacity-60 tracking-wider">{item.label}</span>
+
+                {/* Individual Progress Bar */}
+                <div className="w-full">
+                    <div className="flex justify-between items-end mb-1">
+                        <span className="text-[10px] uppercase font-bold opacity-40">İlerleme</span>
+                        <span className="text-xs font-bold text-accent">%{percentage.toFixed(1)}</span>
+                    </div>
+                    <div className="h-2 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
+                        <div 
+                            className="h-full rounded-full bg-accent transition-all duration-700 ease-out"
+                            style={{ width: `${percentage}%` }}
+                        />
+                    </div>
                 </div>
-            ))}
-            </div>
+            </>
         )}
       </div>
     </div>

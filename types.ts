@@ -1,6 +1,8 @@
+
 export interface ExamConfig {
   id: string;
   name: string;
+  startDate: string; // YYYY-MM-DD (New field)
   date: string; // YYYY-MM-DD
   startTime: string; // HH:MM
   endTime: string; // HH:MM
@@ -8,6 +10,16 @@ export interface ExamConfig {
 }
 
 export type ColorTheme = 'blue' | 'red' | 'green' | 'purple' | 'orange' | 'pink';
+
+export type SocialPlatform = 'instagram' | 'twitter' | 'youtube' | 'website' | 'phone' | 'other';
+
+export interface SocialLink {
+  id: string;
+  platform: SocialPlatform;
+  url: string;
+  label?: string; // For accessibility or display text
+  isVisible: boolean;
+}
 
 export interface AppSettings {
   theme: 'light' | 'dark';
@@ -18,13 +30,9 @@ export interface AppSettings {
     description: string;
     logoUrl: string;
   };
-  social: {
-    instagram: string;
-    twitter: string;
-    youtube: string;
-    phone: string;
-  };
+  socialLinks: SocialLink[];
   dates: {
+    title: string;
     start: string; // YYYY-MM-DD
     end: string; // YYYY-MM-DD
   };

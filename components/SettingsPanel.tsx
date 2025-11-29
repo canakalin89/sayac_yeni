@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
-import { AppSettings, ExamConfig, ColorTheme } from '../types';
-import { CloseIcon, EyeIcon, EyeOffIcon, TrashIcon, PlusIcon } from './Icons';
+import { AppSettings, ExamConfig, ColorTheme, SocialLink, SocialPlatform } from '../types';
+import { CloseIcon, EyeIcon, EyeOffIcon, TrashIcon, PlusIcon, InstagramIcon, TwitterIcon, YouTubeIcon, PhoneIcon, GlobeIcon, LinkIcon } from './Icons';
 import { THEME_COLORS } from '../constants';
 
 interface SettingsPanelProps {
@@ -25,38 +26,26 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     setLocalSettings(settings);
   }, [settings]);
 
-  // Live Preview Effect: Apply theme and color instantly when changed in panel
+  // Live Preview Effect
   useEffect(() => {
     if (!isOpen) return;
 
-    // Apply Dark/Light Mode Preview
     if (localSettings.theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
 
-    // Apply Color Theme Preview
     const selectedColor = THEME_COLORS[localSettings.color] || THEME_COLORS.blue;
     document.documentElement.style.setProperty('--color-accent', selectedColor.main);
     document.documentElement.style.setProperty('--color-accent-hover', selectedColor.hover);
 
-    // Cleanup: If closing without saving (technically if component unmounts or settings change), 
-    // we might want to revert, but checking valid "Apply" vs "Cancel" is hard here.
-    // Instead, we rely on the parent App to re-render and re-apply the *actual* saved settings 
-    // if this panel closes without the `onUpdate` being called.
-    return () => {
-       // Optional: Revert to prop settings immediately on cleanup to prevent flash? 
-       // For now, let's let the parent handle the "truth".
-    };
-
+    return () => {};
   }, [localSettings.theme, localSettings.color, isOpen]);
 
   // Revert preview on close if not saved
   useEffect(() => {
     if (!isOpen) {
-        // When panel closes, ensure we revert to the *saved* settings from props
-        // This handles the "Cancel" case implicitly.
         if (settings.theme === 'dark') {
             document.documentElement.classList.add('dark');
         } else {
@@ -70,16 +59,18 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
 
   const handleChange = (section: keyof AppSettings, key: string, value: string) => {
+    // @ts-ignore
     setLocalSettings((prev) => ({
       ...prev,
       [section]: {
+        // @ts-ignore
         ...prev[section],
         [key]: value,
       },
     }));
   };
   
-  // Dynamic Exam Management
+  // --- Exam Management ---
   const handleExamChange = (id: string, field: keyof ExamConfig, value: string | boolean) => {
       setLocalSettings(prev => ({
           ...prev,
@@ -93,6 +84,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     const newExam: ExamConfig = {
       id: Date.now().toString(),
       name: 'Yeni Sınav',
+      startDate: new Date().toISOString().split('T')[0],
       date: new Date().toISOString().split('T')[0],
       startTime: '10:00',
       endTime: '12:00',
@@ -120,6 +112,46 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }));
   };
 
+  // --- Social Link Management ---
+  const handleSocialLinkChange = (id: string, field: keyof SocialLink, value: string | boolean) => {
+    setLocalSettings(prev => ({
+        ...prev,
+        socialLinks: prev.socialLinks.map(link => 
+          link.id === id ? { ...link, [field]: value } : link
+        )
+    }));
+  }
+
+  const handleAddSocialLink = () => {
+    const newLink: SocialLink = {
+        id: Date.now().toString(),
+        platform: 'website',
+        url: '',
+        label: 'Yeni Bağlantı',
+        isVisible: true
+    };
+    setLocalSettings(prev => ({
+        ...prev,
+        socialLinks: [...prev.socialLinks, newLink]
+    }));
+  }
+
+  const handleRemoveSocialLink = (id: string) => {
+    setLocalSettings(prev => ({
+        ...prev,
+        socialLinks: prev.socialLinks.filter(link => link.id !== id)
+    }));
+  }
+
+  const handleToggleSocialVisibility = (id: string) => {
+    setLocalSettings(prev => ({
+        ...prev,
+        socialLinks: prev.socialLinks.map(link => 
+            link.id === id ? { ...link, isVisible: !link.isVisible } : link
+        )
+    }));
+  }
+
   const handleApply = () => {
     onUpdate(localSettings);
     onClose();
@@ -132,6 +164,17 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   const handleColorChange = (color: ColorTheme) => {
       setLocalSettings(prev => ({...prev, color}));
+  }
+
+  const getPlatformIcon = (platform: SocialPlatform) => {
+      switch(platform) {
+          case 'instagram': return <InstagramIcon />;
+          case 'twitter': return <TwitterIcon />;
+          case 'youtube': return <YouTubeIcon />;
+          case 'phone': return <PhoneIcon />;
+          case 'website': return <GlobeIcon />;
+          default: return <LinkIcon />;
+      }
   }
 
   return (
@@ -238,7 +281,19 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
             {/* Dates */}
             <div className="pb-5 border-b border-gray-200 dark:border-white/10 space-y-3">
-              <p className="text-sm font-medium">Dönem Tarihleri (İlerleme Çubuğu)</p>
+              <p className="text-sm font-medium">Genel İlerleme Çubuğu</p>
+              
+              <div>
+                <label className="text-xs opacity-70 mb-1 block">Çubuk Başlığı</label>
+                <input
+                    type="text"
+                    value={localSettings.dates.title}
+                    placeholder="Örn: YKS Serüveni"
+                    onChange={(e) => handleChange('dates', 'title', e.target.value)}
+                    className="w-full p-2 rounded-md text-sm bg-black/5 border border-black/10 dark:bg-white/5 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs opacity-70 mb-1 block">Başlangıç</label>
@@ -258,6 +313,82 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     className="w-full p-2 rounded-md text-xs bg-black/5 border border-black/10 dark:bg-white/5 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
                   />
                 </div>
+              </div>
+            </div>
+
+             {/* Social Links - Dynamic List */}
+             <div className="pb-5 border-b border-gray-200 dark:border-white/10 space-y-4">
+              <div className="flex justify-between items-center">
+                <p className="text-sm font-medium">Sosyal Medya & İletişim</p>
+                <button 
+                  onClick={handleAddSocialLink}
+                  className="flex items-center gap-1 text-xs bg-accent/10 text-accent hover:bg-accent/20 px-2 py-1 rounded transition-colors"
+                >
+                  <PlusIcon /> Ekle
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                {localSettings.socialLinks.map((link) => (
+                  <div key={link.id} className={`p-3 rounded-lg border ${link.isVisible ? 'bg-black/5 dark:bg-white/5 border-transparent' : 'bg-transparent border-dashed border-gray-300 dark:border-gray-700 opacity-60'}`}>
+                    <div className="flex justify-between items-center mb-2 gap-2">
+                       <div className="flex items-center gap-2 flex-grow">
+                            <span className="text-accent opacity-70">
+                                {getPlatformIcon(link.platform)}
+                            </span>
+                            <select 
+                                value={link.platform}
+                                onChange={(e) => handleSocialLinkChange(link.id, 'platform', e.target.value as SocialPlatform)}
+                                className="bg-transparent text-xs font-bold focus:outline-none"
+                            >
+                                <option value="website" className="text-black">Web Sitesi</option>
+                                <option value="instagram" className="text-black">Instagram</option>
+                                <option value="twitter" className="text-black">Twitter/X</option>
+                                <option value="youtube" className="text-black">YouTube</option>
+                                <option value="phone" className="text-black">Telefon</option>
+                                <option value="other" className="text-black">Diğer</option>
+                            </select>
+                       </div>
+
+                      <div className="flex gap-1">
+                        <button 
+                          onClick={() => handleToggleSocialVisibility(link.id)}
+                          className="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-text-light dark:text-text-dark"
+                          title={link.isVisible ? "Gizle" : "Göster"}
+                        >
+                          {link.isVisible ? <EyeIcon /> : <EyeOffIcon />}
+                        </button>
+                        <button 
+                          onClick={() => handleRemoveSocialLink(link.id)}
+                          className="p-1.5 rounded hover:bg-red-500/10 text-red-500"
+                          title="Sil"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-2">
+                        <input
+                            type="text"
+                            value={link.label || ''}
+                            placeholder="Görünen İsim (Örn: Instagram)"
+                            onChange={(e) => handleSocialLinkChange(link.id, 'label', e.target.value)}
+                            className="w-full p-1.5 rounded text-xs bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent mb-1"
+                        />
+                         <input
+                            type="text"
+                            value={link.url}
+                            placeholder={link.platform === 'phone' ? 'Telefon Numarası' : 'URL / Kullanıcı Adı'}
+                            onChange={(e) => handleSocialLinkChange(link.id, 'url', e.target.value)}
+                            className="w-full p-1.5 rounded text-xs bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent font-mono"
+                        />
+                    </div>
+                  </div>
+                ))}
+                {localSettings.socialLinks.length === 0 && (
+                  <p className="text-xs text-center opacity-50 py-2">Henüz bağlantı eklenmemiş.</p>
+                )}
               </div>
             </div>
 
@@ -303,12 +434,27 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     </div>
                     
                     <div className="grid grid-cols-1 gap-2">
-                        <input
-                            type="date"
-                            value={exam.date}
-                            onChange={(e) => handleExamChange(exam.id, 'date', e.target.value)}
-                            className="w-full p-1.5 rounded text-xs bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent"
-                        />
+                        <div className="flex gap-2">
+                            <div className="w-1/2">
+                                <label className="text-[10px] opacity-60 block mb-0.5">Başlangıç</label>
+                                <input
+                                    type="date"
+                                    value={exam.startDate}
+                                    onChange={(e) => handleExamChange(exam.id, 'startDate', e.target.value)}
+                                    className="w-full p-1.5 rounded text-xs bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent"
+                                />
+                            </div>
+                            <div className="w-1/2">
+                                <label className="text-[10px] opacity-60 block mb-0.5">Sınav Tarihi</label>
+                                <input
+                                    type="date"
+                                    value={exam.date}
+                                    onChange={(e) => handleExamChange(exam.id, 'date', e.target.value)}
+                                    className="w-full p-1.5 rounded text-xs bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent"
+                                />
+                            </div>
+                        </div>
+                        
                         <div className="flex gap-2">
                             <input
                                 type="time"
