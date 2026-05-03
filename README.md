@@ -15,6 +15,8 @@ Bu uygulama sadece basit bir sayaç değil, detaylı bir takip sistemidir:
 *   **Gelişmiş Görsel Özelleştirme:**
     *   **Koyu / Açık Mod** desteği.
     *   **6 Farklı Renk Teması** (Mavi, Kırmızı, Yeşil, Mor, Turuncu, Pembe).
+    *   **Glassmorphism** (cam efekti) kartlar ve arayüz elemanları.
+    *   Hareketli **mesh gradient** arka plan.
     *   Tüm renkler ve gölgeler seçilen temaya göre otomatik güncellenir.
 *   **Kurumsal Kimlik Entegrasyonu:**
     *   Okul Adı, Alt Başlık ve Açıklama metinleri düzenlenebilir.
@@ -30,6 +32,8 @@ Bu uygulama sadece basit bir sayaç değil, detaylı bir takip sistemidir:
     *   Her eğitim öğretim yılı için ayarlar otomatik olarak ayrılır (`localStorage`).
     *   Yeni yıla geçişte önceki yılın ayarlarını tek tıkla kopyalayabilir ve sınav tarihlerini otomatik güncelleyebilirsiniz.
     *   Varsayılan sınav tarihleri (TYT, AYT, YDT) ÖSYM takvimine göre otomatik hesaplanır.
+*   **Otomatik Kaydetme:**
+    *   Ayarlar panelinde yaptığınız her değişiklik anında kaydedilir, kaydetme butonuna gerek yoktur.
 *   **Kalıcı Ayarlar:**
     *   Yapılan tüm değişiklikler tarayıcının `localStorage` biriminde saklanır. Sayfa yenilendiğinde ayarlar kaybolmaz.
     *   Eski kayıtlar otomatik olarak yeni yıl sistemine taşınır (migrate).
@@ -55,8 +59,8 @@ Bu projeyi kendi bilgisayarınızda çalıştırmak veya geliştirmek için aşa
 
 1.  **Projeyi Klonlayın:**
     ```bash
-    git clone https://github.com/kullaniciadi/yks-geri-sayim.git
-    cd yks-geri-sayim
+    git clone https://github.com/canakalin89/sayac_yeni.git
+    cd sayac_yeni
     ```
 
 2.  **Bağımlılıkları Yükleyin:**
@@ -85,14 +89,25 @@ Projeyi GitHub'a yükledikten sonra Netlify'a bağlamanız yeterlidir. Sistem ot
 
 ## ⚙️ Kullanım Kılavuzu
 
-Uygulama açıldığında sağ alt köşedeki **Ayarlar (Dişli Çark)** ikonuna tıklayarak yönetim panelini açabilirsiniz:
+### Ayarlar Panelini Açma
 
-1.  **Görünüm:** Temayı (Koyu/Açık) ve ana rengi değiştirin.
-2.  **Okul Bilgileri:** Okul ismini, açıklamasını ve logo URL'sini girin.
+Ayarlar butonu ekranda **görünmez**. Paneli açmak için iki yöntem vardır:
+
+1.  **Klavye Kısayolu:** `Ctrl + Shift + S`
+2.  **Sağ Üst Köşe:** Fareyi sayfanın sağ üst köşesine (logonun sağına) götürün. Küçük bir mavi nokta belirecektir. Üzerine tıklayarak paneli açabilirsiniz.
+
+### Ayarlar Paneli Bölümleri
+
+1.  **Görünüm:** Koyu / Açık mod ve 6 farklı ana renk arasından seçim yapın. Değişiklikler anında uygulanır ve otomatik kaydedilir.
+2.  **Okul Bilgileri:** Okul ismini, alt başlığını, açıklamasını ve logo URL'sini düzenleyin.
 3.  **Genel İlerleme:** Dönem başlangıç ve bitiş tarihlerini ayarlayın.
-4.  **Sosyal Medya:** "Ekle" butonu ile yeni linkler ekleyin, göz ikonu ile gizleyin veya çöp kutusu ile silin.
-5.  **Sayaçlar:** Sınav adını, tarihini ve başlangıç tarihini (ilerleme çubuğu için) girin.
-6.  **Yıl Yönetimi:** "Tüm Tarihleri +1 Yıl Kaydır" butonu ile mevcut sınav tarihlerini topluca ileri alabilir veya "Önceki Yıl Ayarlarını Kopyala" ile geçmiş yıl verilerini taşıyabilirsiniz.
+4.  **Sosyal Medya:** Platform seçimi, görünen isim ve URL girerek yeni bağlantılar ekleyin. Gizleme ve silme butonları mevcuttur.
+5.  **Sayaçlar:** Sınav adı, başlangıç tarihi, sınav tarihi ve saat bilgilerini girin.
+6.  **Yıl Yönetimi:**
+    *   **Tüm Tarihleri +1 Yıl Kaydır:** Mevcut tüm sınav ve dönem tarihlerini bir yıl ileri alır.
+    *   **Önceki Yıl Ayarlarını Kopyala:** `localStorage`'dan bir önceki akademik yılın verilerini çeker, okul bilgilerini korur ve sınav tarihlerini günceller.
+
+> ⚠️ **ÖSYM Uyarısı:** Sınav tarihleri, ÖSYM'nin geçmiş yıllardaki takvimine göre otomatik hesaplanmış **tahmini** tarihlerdir. Kesin tarihler için lütfen [resmi ÖSYM takvimini](https://www.osym.gov.tr/TR,9493/sinav-takvimi.html) kontrol ediniz.
 
 ### 🔄 Yıllık Kullanım ve Geçiş
 
