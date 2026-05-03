@@ -26,8 +26,13 @@ Bu uygulama sadece basit bir sayaç değil, detaylı bir takip sistemidir:
     *   Eğitim öğretim yılına veya belirlediğiniz tarih aralığına göre genel yüzdelik ilerleme çubuğu.
 *   **Ziyaretçi Sayacı:**
     *   Veritabanı gerektirmeyen, API tabanlı (CounterAPI) ve kurum ismine özel çalışan canlı ziyaretçi sayacı.
+*   **Akademik Yıl Yönetimi (Otomatik):**
+    *   Her eğitim öğretim yılı için ayarlar otomatik olarak ayrılır (`localStorage`).
+    *   Yeni yıla geçişte önceki yılın ayarlarını tek tıkla kopyalayabilir ve sınav tarihlerini otomatik güncelleyebilirsiniz.
+    *   Varsayılan sınav tarihleri (TYT, AYT, YDT) ÖSYM takvimine göre otomatik hesaplanır.
 *   **Kalıcı Ayarlar:**
-    *   Yapılan tüm değişiklikler tarayıcının `LocalStorage` biriminde saklanır. Sayfa yenilendiğinde ayarlar kaybolmaz.
+    *   Yapılan tüm değişiklikler tarayıcının `localStorage` biriminde saklanır. Sayfa yenilendiğinde ayarlar kaybolmaz.
+    *   Eski kayıtlar otomatik olarak yeni yıl sistemine taşınır (migrate).
 
 ## 🛠 Kullanılan Teknolojiler
 
@@ -87,6 +92,15 @@ Uygulama açıldığında sağ alt köşedeki **Ayarlar (Dişli Çark)** ikonuna
 3.  **Genel İlerleme:** Dönem başlangıç ve bitiş tarihlerini ayarlayın.
 4.  **Sosyal Medya:** "Ekle" butonu ile yeni linkler ekleyin, göz ikonu ile gizleyin veya çöp kutusu ile silin.
 5.  **Sayaçlar:** Sınav adını, tarihini ve başlangıç tarihini (ilerleme çubuğu için) girin.
+6.  **Yıl Yönetimi:** "Tüm Tarihleri +1 Yıl Kaydır" butonu ile mevcut sınav tarihlerini topluca ileri alabilir veya "Önceki Yıl Ayarlarını Kopyala" ile geçmiş yıl verilerini taşıyabilirsiniz.
+
+### 🔄 Yıllık Kullanım ve Geçiş
+
+Uygulama her eğitim öğretim yılı için ayrı bir profil oluşturur:
+
+*   **Otomatik Yıl Algılama:** Eylül ayından itibaren yeni akademik yılı otomatik algılar.
+*   **Yıl Geçiş Sihirbazı:** Yeni yıla geçtiğinizde, önceki yılın ayarlarını kopyalama teklifi sunar (okul bilgileri ve sosyal medya linkleri korunur, sınav tarihleri otomatik kaydırılır).
+*   **Manuel Geçiş:** Ayarlar panelinden istediğiniz zaman "Önceki Yıl Ayarlarını Kopyala" veya "Tüm Tarihleri +1 Yıl Kaydır" seçeneklerini kullanabilirsiniz.
 
 ## 👨‍💻 Geliştirici
 

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>YKS Geri Sayım</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -16,16 +16,16 @@
             },
             colors: {
               bg: {
-                dark: '#0f172a', /* Slate 950 - Derin Gece Mavisi */
-                light: '#f1f5f9', /* Slate 100 - Soğuk Açık Gri */
+                dark: '#030712',
+                light: '#f8fafc',
               },
               card: {
-                dark: '#1e293b', /* Slate 800 */
-                light: '#ffffff', /* Beyaz */
+                dark: 'rgba(255,255,255,0.03)',
+                light: 'rgba(255,255,255,0.6)',
               },
               text: {
-                dark: '#e2e8f0', /* Slate 200 */
-                light: '#334155', /* Slate 700 */
+                dark: '#f8fafc',
+                light: '#0f172a',
               },
               accent: {
                 DEFAULT: 'var(--color-accent)',
@@ -33,23 +33,20 @@
               }
             },
             animation: {
-              'gradient-x': 'gradient-x 10s ease infinite',
+              'gradient-x': 'gradient-x 8s ease infinite',
+              'mesh': 'mesh 20s ease infinite',
             },
             keyframes: {
               'gradient-x': {
-                '0%': {
-                  'background-size': '400% 400%',
-                  'background-position': '0% 50%'
-                },
-                '50%': {
-                  'background-size': '400% 400%',
-                  'background-position': '100% 50%'
-                },
-                '100%': {
-                  'background-size': '400% 400%',
-                  'background-position': '0% 50%'
-                },
+                '0%': { 'background-size': '400% 400%', 'background-position': '0% 50%' },
+                '50%': { 'background-size': '400% 400%', 'background-position': '100% 50%' },
+                '100%': { 'background-size': '400% 400%', 'background-position': '0% 50%' },
               },
+              'mesh': {
+                '0%': { 'background-position': '0% 50%' },
+                '50%': { 'background-position': '100% 50%' },
+                '100%': { 'background-position': '0% 50%' },
+              }
             }
           },
         },
@@ -60,33 +57,123 @@
         --color-accent: #3b82f6;
         --color-accent-hover: #2563eb;
       }
-      /* Custom scrollbar for settings panel */
-      ::-webkit-scrollbar {
-        width: 8px;
+
+      /* Mesh gradient background */
+      .mesh-bg {
+        background:
+          radial-gradient(at 0% 0%, hsla(220,80%,25%,0.4) 0, transparent 50%),
+          radial-gradient(at 100% 0%, hsla(260,60%,30%,0.3) 0, transparent 50%),
+          radial-gradient(at 100% 100%, hsla(210,70%,20%,0.4) 0, transparent 50%),
+          radial-gradient(at 0% 100%, hsla(240,50%,25%,0.3) 0, transparent 50%);
+        background-size: 200% 200%;
+        animation: mesh-move 20s ease infinite;
       }
-      ::-webkit-scrollbar-track {
-        background: transparent;
+      @keyframes mesh-move {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
       }
-      ::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 4px;
+
+      /* Glassmorphism card base */
+      html.dark .glass {
+        background: rgba(255,255,255,0.03);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 8px 32px 0 rgba(0,0,0,0.2);
       }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #555;
+      html:not(.dark) .glass {
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(0,0,0,0.06);
+        box-shadow: 0 8px 32px 0 rgba(0,0,0,0.06);
       }
+
+      /* Spotlight hover effect */
+      .spotlight {
+        position: relative;
+        overflow: hidden;
+      }
+      .spotlight::before {
+        content: '';
+        position: absolute;
+        top: var(--mouse-y, 50%);
+        left: var(--mouse-x, 50%);
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, var(--color-accent) 0%, transparent 70%);
+        opacity: 0;
+        transform: translate(-50%, -50%);
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .spotlight:hover::before {
+        opacity: 0.08;
+      }
+
+      /* Number pop animation */
+      @keyframes number-pop {
+        0% { transform: scale(1); }
+        40% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+      }
+      .number-pop {
+        animation: number-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      /* Glow pulse for accent elements */
+      @keyframes glow-pulse {
+        0%, 100% { box-shadow: 0 0 5px var(--color-accent), 0 0 10px var(--color-accent); }
+        50% { box-shadow: 0 0 15px var(--color-accent), 0 0 30px var(--color-accent); }
+      }
+      .glow-pulse {
+        animation: glow-pulse 3s ease-in-out infinite;
+      }
+
+      /* Shine sweep for progress bars */
+      @keyframes shine-sweep {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      .shine-sweep::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: shine-sweep 2.5s ease-in-out infinite;
+      }
+
+      /* Fade in up stagger */
+      @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .fade-in-up {
+        animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      /* Floating animation */
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+      }
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+      .animate-float-delayed {
+        animation: float 8s ease-in-out infinite;
+        animation-delay: -2s;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "vite": "https://aistudiocdn.com/vite@^7.2.4",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
-  }
-}
-</script>
-</head>
+  </head>
   <body class="bg-bg-light text-text-light dark:bg-bg-dark dark:text-text-dark transition-colors duration-300 antialiased overflow-x-hidden">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>

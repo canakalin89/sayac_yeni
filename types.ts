@@ -37,6 +37,12 @@ export interface AppSettings {
     end: string; // YYYY-MM-DD
   };
   exams: ExamConfig[];
+  /**
+   * Hangi akademik yılına ait olduğu.
+   * Örn: "2025-2026"
+   * Eski verilerde bu alan olmayabilir.
+   */
+  academicYear?: string;
 }
 
 export interface TimeLeft {

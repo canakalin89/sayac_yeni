@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { AppSettings, ExamConfig, ColorTheme, SocialLink, SocialPlatform } from '../types';
 import { CloseIcon, EyeIcon, EyeOffIcon, TrashIcon, PlusIcon, InstagramIcon, TwitterIcon, YouTubeIcon, PhoneIcon, GlobeIcon, LinkIcon } from './Icons';
 import { THEME_COLORS } from '../constants';
+import { shiftDateByYearSafe, getStorageKey, getPreviousAcademicYear, getEndYearFromAcademicYear } from '../utils/academicYear';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -10,15 +11,17 @@ interface SettingsPanelProps {
   settings: AppSettings;
   onUpdate: (newSettings: AppSettings) => void;
   onReset: () => void;
+  currentYear: string;
 }
 
-const SettingsPanel: React.FC<SettingsPanelProps> = ({
+export default function SettingsPanel({
   isOpen,
   onClose,
   settings,
   onUpdate,
   onReset,
-}) => {
+  currentYear,
+}: SettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
 
   // Sync local state when props change
@@ -42,6 +45,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
     return () => {};
   }, [localSettings.theme, localSettings.color, isOpen]);
+
+  // Auto-save on any localSettings change
+  useEffect(() => {
+    onUpdate(localSettings);
+  }, [localSettings]);
 
   // Revert preview on close if not saved
   useEffect(() => {
@@ -152,11 +160,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }));
   }
 
-  const handleApply = () => {
-    onUpdate(localSettings);
-    onClose();
-  };
-
   const toggleTheme = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newTheme = e.target.checked ? 'dark' : 'light';
       setLocalSettings(prev => ({...prev, theme: newTheme}));
@@ -165,6 +168,62 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const handleColorChange = (color: ColorTheme) => {
       setLocalSettings(prev => ({...prev, color}));
   }
+
+  const handleShiftAllDates = () => {
+    setLocalSettings(prev => {
+      const newEndYear = getEndYearFromAcademicYear(currentYear) + 1;
+      return {
+        ...prev,
+        school: {
+          ...prev.school,
+          subtitle: `YKS${newEndYear} Geri Sayım`,
+        },
+        dates: {
+          ...prev.dates,
+          start: shiftDateByYearSafe(prev.dates.start, 1),
+          end: shiftDateByYearSafe(prev.dates.end, 1),
+        },
+        exams: prev.exams.map(exam => ({
+          ...exam,
+          startDate: shiftDateByYearSafe(exam.startDate, 1),
+          date: shiftDateByYearSafe(exam.date, 1),
+        })),
+      };
+    });
+  };
+
+  const handleCopyPreviousYear = () => {
+    const prevYear = getPreviousAcademicYear(currentYear);
+    const prevSaved = localStorage.getItem(getStorageKey(prevYear));
+    if (!prevSaved) {
+      alert('Önceki yıl ayarı bulunamadı.');
+      return;
+    }
+    try {
+      const parsed: AppSettings = JSON.parse(prevSaved);
+      const newSettings: AppSettings = {
+        ...parsed,
+        academicYear: currentYear,
+        school: {
+          ...parsed.school,
+          subtitle: `YKS${getEndYearFromAcademicYear(currentYear)} Geri Sayım`,
+        },
+        dates: {
+          ...parsed.dates,
+          start: shiftDateByYearSafe(parsed.dates.start, 1),
+          end: shiftDateByYearSafe(parsed.dates.end, 1),
+        },
+        exams: parsed.exams.map(exam => ({
+          ...exam,
+          startDate: shiftDateByYearSafe(exam.startDate, 1),
+          date: shiftDateByYearSafe(exam.date, 1),
+        })),
+      };
+      setLocalSettings(newSettings);
+    } catch {
+      alert('Önceki yıl ayarları okunurken hata oluştu.');
+    }
+  };
 
   const getPlatformIcon = (platform: SocialPlatform) => {
       switch(platform) {
@@ -181,28 +240,31 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     <>
       {/* Backdrop */}
       <div 
-        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
       
       {/* Panel */}
       <div className={`
-        fixed top-5 right-5 bottom-auto rounded-xl z-50 w-96 max-h-[85vh] overflow-y-auto
-        bg-card-light dark:bg-card-dark border border-gray-200 dark:border-gray-800
-        shadow-2xl transition-transform duration-300 transform
+        fixed top-4 right-4 bottom-4 rounded-2xl z-50 w-[420px] max-h-[calc(100vh-2rem)] overflow-y-auto
+        glass backdrop-blur-xl border border-black/10 dark:border-white/10
+        shadow-2xl transition-transform duration-500 transform
         ${isOpen ? 'translate-x-0' : 'translate-x-[450px]'}
       `}>
         <div className="p-6">
-          <div className="flex justify-between items-center mb-6 border-b border-gray-200 dark:border-white/10 pb-4">
-            <h3 className="text-lg font-bold">Özelleştirme Ayarları</h3>
-            <button onClick={onClose} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors">
+          <div className="flex justify-between items-center mb-6 border-b border-black/10 dark:border-white/10 pb-4">
+            <div>
+              <h3 className="text-lg font-bold">Özelleştirme Ayarları</h3>
+              <span className="text-[10px] opacity-50 font-medium">Eğitim Öğretim Yılı: {currentYear}</span>
+            </div>
+            <button onClick={onClose} className="p-1 hover:bg-black/10 dark:bg-white/10 rounded-full transition-colors">
               <CloseIcon />
             </button>
           </div>
 
           <div className="space-y-6">
             {/* Theme & Color */}
-            <div className="pb-5 border-b border-gray-200 dark:border-white/10 space-y-4">
+            <div className="pb-5 border-b border-black/10 dark:border-white/10 space-y-4">
                 <p className="text-sm font-medium">Görünüm</p>
                 
                 {/* Light/Dark Toggle */}
@@ -237,7 +299,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             </div>
 
             {/* School Info */}
-            <div className="pb-5 border-b border-gray-200 dark:border-white/10 space-y-3">
+            <div className="pb-5 border-b border-black/10 dark:border-white/10 space-y-3">
               <p className="text-sm font-medium">Okul Bilgileri</p>
               <div>
                 <label className="text-xs opacity-70 mb-1 block">Başlık</label>
@@ -245,7 +307,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   type="text"
                   value={localSettings.school.title}
                   onChange={(e) => handleChange('school', 'title', e.target.value)}
-                  className="w-full p-2 rounded-md text-sm bg-black/5 border border-black/10 dark:bg-white/5 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="w-full p-2 rounded-md text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
                 />
               </div>
               <div>
@@ -254,7 +316,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   type="text"
                   value={localSettings.school.subtitle}
                   onChange={(e) => handleChange('school', 'subtitle', e.target.value)}
-                  className="w-full p-2 rounded-md text-sm bg-black/5 border border-black/10 dark:bg-white/5 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="w-full p-2 rounded-md text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
                 />
               </div>
               <div>
@@ -264,7 +326,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   value={localSettings.school.logoUrl}
                   placeholder="https://example.com/logo.png"
                   onChange={(e) => handleChange('school', 'logoUrl', e.target.value)}
-                  className="w-full p-2 rounded-md text-sm bg-black/5 border border-black/10 dark:bg-white/5 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="w-full p-2 rounded-md text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <p className="text-[10px] opacity-50 mt-1">Okul logosunun internet adresini buraya yapıştırın.</p>
               </div>
@@ -274,13 +336,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   rows={3}
                   value={localSettings.school.description}
                   onChange={(e) => handleChange('school', 'description', e.target.value)}
-                  className="w-full p-2 rounded-md text-sm bg-black/5 border border-black/10 dark:bg-white/5 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="w-full p-2 rounded-md text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
                 />
               </div>
             </div>
 
             {/* Dates */}
-            <div className="pb-5 border-b border-gray-200 dark:border-white/10 space-y-3">
+            <div className="pb-5 border-b border-black/10 dark:border-white/10 space-y-3">
               <p className="text-sm font-medium">Genel İlerleme Çubuğu</p>
               
               <div>
@@ -290,7 +352,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     value={localSettings.dates.title}
                     placeholder="Örn: YKS Serüveni"
                     onChange={(e) => handleChange('dates', 'title', e.target.value)}
-                    className="w-full p-2 rounded-md text-sm bg-black/5 border border-black/10 dark:bg-white/5 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
+                    className="w-full p-2 rounded-md text-sm bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
                 />
               </div>
 
@@ -301,7 +363,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     type="date"
                     value={localSettings.dates.start}
                     onChange={(e) => handleChange('dates', 'start', e.target.value)}
-                    className="w-full p-2 rounded-md text-xs bg-black/5 border border-black/10 dark:bg-white/5 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
+                    className="w-full p-2 rounded-md text-xs bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
                   />
                 </div>
                 <div>
@@ -310,14 +372,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     type="date"
                     value={localSettings.dates.end}
                     onChange={(e) => handleChange('dates', 'end', e.target.value)}
-                    className="w-full p-2 rounded-md text-xs bg-black/5 border border-black/10 dark:bg-white/5 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
+                    className="w-full p-2 rounded-md text-xs bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-accent"
                   />
                 </div>
               </div>
             </div>
 
              {/* Social Links - Dynamic List */}
-             <div className="pb-5 border-b border-gray-200 dark:border-white/10 space-y-4">
+             <div className="pb-5 border-b border-black/10 dark:border-white/10 space-y-4">
               <div className="flex justify-between items-center">
                 <p className="text-sm font-medium">Sosyal Medya & İletişim</p>
                 <button 
@@ -330,7 +392,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
               
               <div className="space-y-3">
                 {localSettings.socialLinks.map((link) => (
-                  <div key={link.id} className={`p-3 rounded-lg border ${link.isVisible ? 'bg-black/5 dark:bg-white/5 border-transparent' : 'bg-transparent border-dashed border-gray-300 dark:border-gray-700 opacity-60'}`}>
+                  <div key={link.id} className={`p-3 rounded-lg border ${link.isVisible ? 'bg-black/5 dark:bg-white/5 border-transparent' : 'bg-transparent border-dashed border-black/20 dark:border-white/20 opacity-60'}`}>
                     <div className="flex justify-between items-center mb-2 gap-2">
                        <div className="flex items-center gap-2 flex-grow">
                             <span className="text-accent opacity-70">
@@ -353,7 +415,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       <div className="flex gap-1">
                         <button 
                           onClick={() => handleToggleSocialVisibility(link.id)}
-                          className="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-text-light dark:text-text-dark"
+                          className="p-1.5 rounded hover:bg-black/10 dark:bg-white/10 text-slate-800 dark:text-white/80"
                           title={link.isVisible ? "Gizle" : "Göster"}
                         >
                           {link.isVisible ? <EyeIcon /> : <EyeOffIcon />}
@@ -374,14 +436,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             value={link.label || ''}
                             placeholder="Görünen İsim (Örn: Instagram)"
                             onChange={(e) => handleSocialLinkChange(link.id, 'label', e.target.value)}
-                            className="w-full p-1.5 rounded text-xs bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent mb-1"
+                            className="w-full p-1.5 rounded text-xs bg-black/5 dark:bg-white/5 focus:outline-none focus:ring-1 focus:ring-accent mb-1"
                         />
                          <input
                             type="text"
                             value={link.url}
                             placeholder={link.platform === 'phone' ? 'Telefon Numarası' : 'URL / Kullanıcı Adı'}
                             onChange={(e) => handleSocialLinkChange(link.id, 'url', e.target.value)}
-                            className="w-full p-1.5 rounded text-xs bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent font-mono"
+                            className="w-full p-1.5 rounded text-xs bg-black/5 dark:bg-white/5 focus:outline-none focus:ring-1 focus:ring-accent font-mono"
                         />
                     </div>
                   </div>
@@ -393,7 +455,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             </div>
 
             {/* Exams - Dynamic List */}
-            <div className="pb-5 border-b border-gray-200 dark:border-white/10 space-y-4">
+            <div className="pb-5 border-b border-black/10 dark:border-white/10 space-y-4">
+              <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-700 dark:text-yellow-300">
+                <p className="font-medium mb-1">⚠️ Önemli Not</p>
+                <p className="opacity-80">
+                  Aşağıdaki sınav tarihleri ÖSYM'nin geçmiş yıllardaki takvimine göre otomatik hesaplanmış <strong>tahmini</strong> tarihlerdir.
+                  Kesin tarihler için lütfen <a href="https://www.osym.gov.tr/TR,9493/sinav-takvimi.html" target="_blank" rel="noreferrer" className="underline hover:text-accent">resmi ÖSYM takvimini</a> kontrol ediniz.
+                </p>
+              </div>
               <div className="flex justify-between items-center">
                 <p className="text-sm font-medium">Sayaçlar ve Sınavlar</p>
                 <button 
@@ -406,19 +475,19 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
               
               <div className="space-y-4">
                 {localSettings.exams.map((exam) => (
-                  <div key={exam.id} className={`p-3 rounded-lg border ${exam.isVisible ? 'bg-black/5 dark:bg-white/5 border-transparent' : 'bg-transparent border-dashed border-gray-300 dark:border-gray-700 opacity-60'}`}>
+                  <div key={exam.id} className={`p-3 rounded-lg border ${exam.isVisible ? 'bg-black/5 dark:bg-white/5 border-transparent' : 'bg-transparent border-dashed border-black/20 dark:border-white/20 opacity-60'}`}>
                     <div className="flex justify-between items-start mb-2 gap-2">
                       <input
                         type="text"
                         value={exam.name}
                         onChange={(e) => handleExamChange(exam.id, 'name', e.target.value)}
-                        className="flex-grow p-1.5 rounded text-xs font-bold bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent"
+                        className="flex-grow p-1.5 rounded text-xs font-bold bg-black/5 dark:bg-white/5 focus:outline-none focus:ring-1 focus:ring-accent"
                         placeholder="Sınav Adı"
                       />
                       <div className="flex gap-1">
                         <button 
                           onClick={() => handleToggleExamVisibility(exam.id)}
-                          className="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-text-light dark:text-text-dark"
+                          className="p-1.5 rounded hover:bg-black/10 dark:bg-white/10 text-slate-800 dark:text-white/80"
                           title={exam.isVisible ? "Gizle" : "Göster"}
                         >
                           {exam.isVisible ? <EyeIcon /> : <EyeOffIcon />}
@@ -441,7 +510,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                     type="date"
                                     value={exam.startDate}
                                     onChange={(e) => handleExamChange(exam.id, 'startDate', e.target.value)}
-                                    className="w-full p-1.5 rounded text-xs bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent"
+                                    className="w-full p-1.5 rounded text-xs bg-black/5 dark:bg-white/5 focus:outline-none focus:ring-1 focus:ring-accent"
                                 />
                             </div>
                             <div className="w-1/2">
@@ -450,7 +519,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                     type="date"
                                     value={exam.date}
                                     onChange={(e) => handleExamChange(exam.id, 'date', e.target.value)}
-                                    className="w-full p-1.5 rounded text-xs bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent"
+                                    className="w-full p-1.5 rounded text-xs bg-black/5 dark:bg-white/5 focus:outline-none focus:ring-1 focus:ring-accent"
                                 />
                             </div>
                         </div>
@@ -460,14 +529,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                 type="time"
                                 value={exam.startTime}
                                 onChange={(e) => handleExamChange(exam.id, 'startTime', e.target.value)}
-                                className="w-full p-1.5 rounded text-xs bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent"
+                                className="w-full p-1.5 rounded text-xs bg-black/5 dark:bg-white/5 focus:outline-none focus:ring-1 focus:ring-accent"
                             />
                             <span className="self-center">-</span>
                             <input
                                 type="time"
                                 value={exam.endTime}
                                 onChange={(e) => handleExamChange(exam.id, 'endTime', e.target.value)}
-                                className="w-full p-1.5 rounded text-xs bg-white/50 dark:bg-black/20 focus:outline-none focus:ring-1 focus:ring-accent"
+                                className="w-full p-1.5 rounded text-xs bg-black/5 dark:bg-white/5 focus:outline-none focus:ring-1 focus:ring-accent"
                             />
                         </div>
                     </div>
@@ -479,20 +548,32 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
               </div>
             </div>
 
+            {/* Year Management Tools */}
+            <div className="pb-5 border-b border-black/10 dark:border-white/10 space-y-3">
+              <p className="text-sm font-medium">Yıl Yönetimi</p>
+              <button
+                onClick={handleShiftAllDates}
+                className="w-full py-2 px-3 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent text-xs font-medium transition-colors"
+                title="Tüm sınav ve dönem tarihlerini 1 yıl ileri alır"
+              >
+                Tüm Tarihleri +1 Yıl Kaydır
+              </button>
+              <button
+                onClick={handleCopyPreviousYear}
+                className="w-full py-2 px-3 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-black/5 dark:bg-white/5 dark:hover:bg-black/10 dark:bg-white/10 text-slate-800 dark:text-white/80 text-xs font-medium transition-colors"
+              >
+                Önceki Yıl Ayarlarını Kopyala ve Güncelle
+              </button>
+            </div>
+
             {/* Actions */}
             <div className="space-y-2 pt-2">
-              <button
-                onClick={handleApply}
-                className="w-full py-2.5 px-4 rounded-lg bg-accent hover:bg-accent-hover text-white font-medium transition-colors text-sm shadow-lg shadow-accent/20"
-              >
-                Değişiklikleri Uygula
-              </button>
               <button
                 onClick={() => {
                     onReset();
                     onClose();
                 }}
-                className="w-full py-2.5 px-4 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 text-text-light dark:text-text-dark font-medium transition-colors text-sm"
+                className="w-full py-2.5 px-4 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white/80 font-medium transition-colors text-sm"
               >
                 Ayarları Sıfırla
               </button>
@@ -502,6 +583,5 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       </div>
     </>
   );
-};
+}
 
-export default SettingsPanel;

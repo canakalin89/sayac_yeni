@@ -1,250 +1,179 @@
-
 import React, { useState, useEffect } from 'react';
-import { AppSettings, SocialPlatform } from './types';
-import { DEFAULT_SETTINGS, THEME_COLORS } from './constants';
+import type { AppSettings, SocialPlatform } from './types';
+import { getDefaultSettings, THEME_COLORS } from './constants';
 import SettingsPanel from './components/SettingsPanel';
 import CountdownCard from './components/CountdownCard';
 import ProgressBar from './components/ProgressBar';
-import { InstagramIcon, TwitterIcon, YouTubeIcon, PhoneIcon, SettingsIcon, GlobeIcon, LinkIcon, ChartIcon, UserIcon } from './components/Icons';
+import NewYearWizard from './components/NewYearWizard';
+import {
+  getCurrentAcademicYear,
+  getStorageKey,
+  getLegacyStorageKey,
+  getPreviousAcademicYear,
+} from './utils/academicYear';
+import { InstagramIcon, TwitterIcon, YouTubeIcon, PhoneIcon, GlobeIcon, LinkIcon, ChartIcon } from './components/Icons';
 
-const App: React.FC = () => {
-  // --- State Management ---
+const CURRENT_YEAR = getCurrentAcademicYear();
+
+export default function App() {
   const [settings, setSettings] = useState<AppSettings>(() => {
-    const saved = localStorage.getItem('yks-countdown-settings');
-    if (saved) {
+    const legacy = localStorage.getItem(getLegacyStorageKey());
+    if (legacy) {
       try {
-        const parsed = JSON.parse(saved);
-        
-        // --- MIGRATION LOGIC ---
-        // If data is old (has 'social' object instead of 'socialLinks' array), migrate it
+        const parsed = JSON.parse(legacy);
         if (!parsed.socialLinks && parsed.social) {
-            const newSocialLinks = [];
-            let idCounter = 1;
-
-            if (parsed.social.instagram) {
-                newSocialLinks.push({ id: (idCounter++).toString(), platform: 'instagram', url: parsed.social.instagram, label: 'Instagram', isVisible: true });
-            }
-            if (parsed.social.twitter) {
-                newSocialLinks.push({ id: (idCounter++).toString(), platform: 'twitter', url: parsed.social.twitter, label: 'Twitter/X', isVisible: true });
-            }
-            if (parsed.social.youtube) {
-                newSocialLinks.push({ id: (idCounter++).toString(), platform: 'youtube', url: parsed.social.youtube, label: 'YouTube', isVisible: true });
-            }
-            if (parsed.social.phone) {
-                newSocialLinks.push({ id: (idCounter++).toString(), platform: 'phone', url: parsed.social.phone, label: 'Telefon', isVisible: true });
-            }
-
-            // Add Default Website if not present
-            newSocialLinks.unshift({
-                id: (idCounter++).toString(),
-                platform: 'website',
-                url: 'https://azizsancaranadolu.meb.k12.tr/',
-                label: 'Web Sitesi',
-                isVisible: true
-            });
-
-            parsed.socialLinks = newSocialLinks;
-            delete parsed.social; // Remove old key
+          const newSocialLinks = [];
+          let idCounter = 1;
+          if (parsed.social.instagram) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'instagram', url: parsed.social.instagram, label: 'Instagram', isVisible: true });
+          if (parsed.social.twitter) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'twitter', url: parsed.social.twitter, label: 'Twitter/X', isVisible: true });
+          if (parsed.social.youtube) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'youtube', url: parsed.social.youtube, label: 'YouTube', isVisible: true });
+          if (parsed.social.phone) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'phone', url: parsed.social.phone, label: 'Telefon', isVisible: true });
+          newSocialLinks.unshift({ id: (idCounter++).toString(), platform: 'website', url: 'https://azizsancaranadolu.meb.k12.tr/', label: 'Web Sitesi', isVisible: true });
+          parsed.socialLinks = newSocialLinks;
+          delete parsed.social;
         }
-
-        // Ensure array safety
-        if (!Array.isArray(parsed.exams)) {
-            return DEFAULT_SETTINGS;
-        }
-        
-        // Migrate exams to include startDate if missing
-        parsed.exams = parsed.exams.map((exam: any) => ({
-            ...exam,
-            startDate: exam.startDate || parsed.dates.start || DEFAULT_SETTINGS.dates.start
-        }));
-
-        if (!Array.isArray(parsed.socialLinks)) {
-            parsed.socialLinks = DEFAULT_SETTINGS.socialLinks;
-        }
-
-        // Ensure color is present for older saves
-        if (!parsed.color) {
-            parsed.color = DEFAULT_SETTINGS.color;
-        }
-
-        // Ensure dates title exists
-        if (!parsed.dates.title) {
-            parsed.dates.title = DEFAULT_SETTINGS.dates.title;
-        }
-
+        if (!Array.isArray(parsed.exams)) parsed.exams = getDefaultSettings(CURRENT_YEAR).exams;
+        parsed.exams = parsed.exams.map((exam: any) => ({ ...exam, startDate: exam.startDate || parsed.dates?.start || getDefaultSettings(CURRENT_YEAR).dates.start }));
+        if (!Array.isArray(parsed.socialLinks)) parsed.socialLinks = getDefaultSettings(CURRENT_YEAR).socialLinks;
+        if (!parsed.color) parsed.color = getDefaultSettings(CURRENT_YEAR).color;
+        if (!parsed.dates?.title) { parsed.dates = parsed.dates || {}; parsed.dates.title = getDefaultSettings(CURRENT_YEAR).dates.title; }
+        parsed.academicYear = CURRENT_YEAR;
+        localStorage.setItem(getStorageKey(CURRENT_YEAR), JSON.stringify(parsed));
+        localStorage.removeItem(getLegacyStorageKey());
         return parsed;
-      } catch (e) {
-        return DEFAULT_SETTINGS;
-      }
+      } catch { return getDefaultSettings(CURRENT_YEAR); }
     }
-    return DEFAULT_SETTINGS;
+    const saved = localStorage.getItem(getStorageKey(CURRENT_YEAR));
+    if (saved) { try { return JSON.parse(saved); } catch { return getDefaultSettings(CURRENT_YEAR); } }
+    return getDefaultSettings(CURRENT_YEAR);
   });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [visitCount, setVisitCount] = useState<number | null>(null);
   const [logoError, setLogoError] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
+  const [previousSettings, setPreviousSettings] = useState<AppSettings | null>(null);
 
-  // --- Effects ---
-  
-  // Persist settings
+  // Keyboard shortcut: Ctrl + Shift + S
   useEffect(() => {
-    localStorage.setItem('yks-countdown-settings', JSON.stringify(settings));
-  }, [settings]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        setIsSettingsOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
-  // Reset logo error when URL changes
   useEffect(() => {
-    setLogoError(false);
-  }, [settings.school.logoUrl]);
-
-  // Apply Theme & Color
-  useEffect(() => {
-    // Apply Dark/Light Mode
-    if (settings.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    const saved = localStorage.getItem(getStorageKey(CURRENT_YEAR));
+    if (!saved) {
+      const prevYear = getPreviousAcademicYear(CURRENT_YEAR);
+      const prevSaved = localStorage.getItem(getStorageKey(prevYear));
+      if (prevSaved) {
+        try { setPreviousSettings(JSON.parse(prevSaved)); setShowWizard(true); } catch {}
+      }
     }
+  }, []);
 
-    // Apply Color Theme
+  useEffect(() => { localStorage.setItem(getStorageKey(CURRENT_YEAR), JSON.stringify(settings)); }, [settings]);
+  useEffect(() => { setLogoError(false); }, [settings.school.logoUrl]);
+  useEffect(() => {
+    if (settings.theme === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
     const selectedColor = THEME_COLORS[settings.color] || THEME_COLORS.blue;
     document.documentElement.style.setProperty('--color-accent', selectedColor.main);
     document.documentElement.style.setProperty('--color-accent-hover', selectedColor.hover);
-
   }, [settings.theme, settings.color]);
 
-  // Visit Counter Effect
   useEffect(() => {
     const fetchCount = async () => {
       try {
-        // Create a URL-safe key from the school title to ensure uniqueness per school name
-        const key = settings.school.title
-            .toLowerCase()
-            .trim()
-            .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
-            .replace(/[^a-z0-9]/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '') || 'default-school-yks';
-            
-        // API Key (Namespace) provided by user
+        const key = settings.school.title.toLowerCase().trim().replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'default-school-yks';
         const NAMESPACE_ID = 'ut_RJmfCA1gQ2URIJ24wzQDzvLQ66sWtUouCLyW1vFv';
-        
-        // Using counterapi.dev - format: /v1/{namespace}/{key}/up
         const response = await fetch(`https://api.counterapi.dev/v1/${NAMESPACE_ID}/${key}/up`);
         const data = await response.json();
-        
-        if (data && typeof data.count === 'number') {
-          setVisitCount(data.count);
-        }
-      } catch (error) {
-        console.error('Counter API error:', error);
-      }
+        if (data && typeof data.count === 'number') setVisitCount(data.count);
+      } catch (error) { console.error('Counter API error:', error); }
     };
-
     fetchCount();
   }, [settings.school.title]);
 
-  // --- Handlers ---
-  const handleUpdateSettings = (newSettings: AppSettings) => {
-    setSettings(newSettings);
-  };
+  const handleUpdateSettings = (newSettings: AppSettings) => setSettings(newSettings);
+  const handleResetSettings = () => setSettings(getDefaultSettings(CURRENT_YEAR));
+  const handleWizardAccept = (newSettings: AppSettings) => { setSettings(newSettings); setShowWizard(false); };
+  const handleWizardDecline = () => { setSettings(getDefaultSettings(CURRENT_YEAR)); setShowWizard(false); };
 
-  const handleResetSettings = () => {
-    setSettings(DEFAULT_SETTINGS);
-  };
-
-  // Filter visible exams
   const visibleExams = settings.exams.filter(exam => exam.isVisible);
   const visibleLinks = settings.socialLinks.filter(link => link.isVisible);
 
-  // Helper to get icon
   const getIcon = (platform: SocialPlatform) => {
-      switch(platform) {
-          case 'instagram': return <InstagramIcon />;
-          case 'twitter': return <TwitterIcon />;
-          case 'youtube': return <YouTubeIcon />;
-          case 'phone': return <PhoneIcon />;
-          case 'website': return <GlobeIcon />;
-          default: return <LinkIcon />;
-      }
+    switch (platform) {
+      case 'instagram': return <InstagramIcon />;
+      case 'twitter': return <TwitterIcon />;
+      case 'youtube': return <YouTubeIcon />;
+      case 'phone': return <PhoneIcon />;
+      case 'website': return <GlobeIcon />;
+      default: return <LinkIcon />;
+    }
   };
 
-  // Helper to get href
   const getHref = (platform: SocialPlatform, url: string) => {
-      if (platform === 'phone') return `tel:${url}`;
-      
-      let finalUrl = url;
-      if (platform === 'instagram' && !url.startsWith('http')) finalUrl = `https://instagram.com/${url.replace('@', '')}`;
-      if (platform === 'twitter' && !url.startsWith('http')) finalUrl = `https://twitter.com/${url.replace('@', '')}`;
-      if (platform === 'youtube' && !url.startsWith('http')) finalUrl = `https://youtube.com/${url}`;
-      
-      // Default fallback for others if not absolute
-      if (!finalUrl.startsWith('http')) return `https://${finalUrl}`;
-      
-      return finalUrl;
+    if (platform === 'phone') return `tel:${url}`;
+    let finalUrl = url;
+    if (platform === 'instagram' && !url.startsWith('http')) finalUrl = `https://instagram.com/${url.replace('@', '')}`;
+    if (platform === 'twitter' && !url.startsWith('http')) finalUrl = `https://twitter.com/${url.replace('@', '')}`;
+    if (platform === 'youtube' && !url.startsWith('http')) finalUrl = `https://youtube.com/${url}`;
+    if (!finalUrl.startsWith('http')) return `https://${finalUrl}`;
+    return finalUrl;
   };
 
-  // Get main website URL for logo click
   const websiteLink = settings.socialLinks.find(link => link.platform === 'website') || settings.socialLinks[0];
   const logoHref = websiteLink ? getHref(websiteLink.platform, websiteLink.url) : '#';
 
   return (
-    <div className="min-h-screen flex flex-col relative">
-      
-      {/* Header Section */}
-      <header className="relative bg-gradient-to-br from-accent/10 to-accent/5 pb-16 pt-12 px-4 border-b border-gray-200 dark:border-white/5">
+    <div className="min-h-screen flex flex-col relative dark:mesh-bg bg-bg-light dark:bg-bg-dark">
+
+      {/* Header */}
+      <header className="relative pb-20 pt-16 px-4 overflow-hidden">
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-             <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-accent/10 rounded-full blur-3xl"></div>
-             <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] bg-accent/5 rounded-full blur-3xl"></div>
+          <div className="absolute -top-[30%] -left-[10%] w-[60%] h-[60%] bg-accent/20 rounded-full blur-[120px] animate-float"></div>
+          <div className="absolute top-[10%] -right-[10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[100px] animate-float-delayed"></div>
         </div>
-        
+
         <div className="container mx-auto max-w-6xl relative z-10">
           <div className="flex flex-col items-center text-center">
-            {/* Logo - Clickable */}
             {settings.school.logoUrl && (
-                <a 
-                  href={logoHref} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="w-28 h-28 rounded-full bg-white dark:bg-white shadow-xl flex items-center justify-center mb-8 border-4 border-white/20 dark:border-white/10 p-2 transition-transform hover:scale-105 duration-300 overflow-hidden cursor-pointer group"
-                  title="Web sitesine git"
-                >
-                    {!logoError ? (
-                      <img 
-                          src={settings.school.logoUrl} 
-                          alt="Logo" 
-                          className="w-full h-full object-contain"
-                          onError={() => setLogoError(true)}
-                      />
-                    ) : (
-                      <div className="text-gray-400 group-hover:text-accent transition-colors">
-                        <GlobeIcon />
-                      </div>
-                    )}
-                </a>
+              <a href={logoHref} target="_blank" rel="noreferrer"
+                className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-10 block transition-transform hover:scale-110 duration-300"
+                title="Web sitesine git">
+                {!logoError ? (
+                  <img src={settings.school.logoUrl} alt="Logo" className="w-full h-full object-cover block" onError={() => setLogoError(true)} />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-white/40"><GlobeIcon /></div>
+                )}
+              </a>
             )}
 
-            {/* Titles */}
-            <h1 className="text-3xl md:text-5xl font-bold mb-3 tracking-tight text-accent dark:text-accent-hover drop-shadow-sm">
+            <h1 className="text-4xl md:text-7xl font-black mb-4 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-accent to-slate-900/80 dark:from-white dark:via-accent dark:to-white/80 drop-shadow-lg">
               {settings.school.title}
             </h1>
-            <p className="text-xl md:text-2xl font-medium mb-6 opacity-90">{settings.school.subtitle}</p>
-            <p className="text-sm md:text-base max-w-2xl opacity-70 leading-relaxed mb-8">
+            <p className="text-2xl md:text-4xl font-bold mb-4 opacity-90 bg-clip-text text-transparent bg-gradient-to-r from-accent to-purple-500">
+              {settings.school.subtitle}
+            </p>
+            <p className="text-sm md:text-base max-w-xl opacity-60 leading-relaxed mb-10">
               {settings.school.description}
             </p>
 
-            {/* Social & Contact Links */}
             <div className="flex flex-wrap justify-center gap-3">
               {visibleLinks.map((link) => (
-                  <a 
-                    key={link.id}
-                    href={getHref(link.platform, link.url)} 
-                    target={link.platform === 'phone' ? '_self' : '_blank'} 
-                    rel="noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-all hover:-translate-y-1 text-sm font-medium"
-                  >
-                    {getIcon(link.platform)}
-                    <span className="hidden sm:inline">{link.label || link.url}</span>
-                  </a>
+                <a key={link.id} href={getHref(link.platform, link.url)}
+                  target={link.platform === 'phone' ? '_self' : '_blank'} rel="noreferrer"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full glass text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/20 border border-black/10 dark:border-white/10 text-slate-800 dark:text-white">
+                  {getIcon(link.platform)}
+                  <span className="hidden sm:inline">{link.label || link.url}</span>
+                </a>
               ))}
             </div>
           </div>
@@ -252,75 +181,70 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto max-w-6xl px-4 -mt-8 relative z-20 pb-20">
-        
-        <ProgressBar 
-            title={settings.dates.title}
-            startDate={settings.dates.start}
-            endDate={settings.dates.end}
-        />
+      <main className="container mx-auto max-w-6xl px-4 -mt-6 relative z-20 pb-24">
+
+        <ProgressBar title={settings.dates.title} startDate={settings.dates.start} endDate={settings.dates.end} />
 
         {visibleExams.length > 0 ? (
-            <div className={`grid grid-cols-1 ${visibleExams.length === 1 ? 'md:grid-cols-1 max-w-xl mx-auto' : visibleExams.length === 2 ? 'md:grid-cols-2 max-w-4xl mx-auto' : 'md:grid-cols-3'} gap-6`}>
-            {visibleExams.map((exam) => (
-                <CountdownCard 
-                    key={exam.id}
-                    title={exam.name} 
-                    startDate={exam.startDate}
-                    date={exam.date}
-                    startTime={exam.startTime}
-                    endTime={exam.endTime}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+            {visibleExams.map((exam, index) => (
+              <div key={exam.id} className="h-full" style={{ animationDelay: `${index * 100}ms` }}>
+                <CountdownCard
+                  title={exam.name}
+                  startDate={exam.startDate}
+                  date={exam.date}
+                  startTime={exam.startTime}
+                  endTime={exam.endTime}
                 />
+              </div>
             ))}
-            </div>
+          </div>
         ) : (
-            <div className="text-center py-10 opacity-60">
-                <p>Gösterilecek sayaç bulunamadı. Ayarlardan yeni sayaç ekleyebilir veya mevcut olanları görünür yapabilirsiniz.</p>
-            </div>
+          <div className="text-center py-20 opacity-50 glass rounded-2xl">
+            <p className="text-lg">Gösterilecek sayaç bulunamadı.</p>
+            <p className="text-sm mt-2 opacity-70">Ayarlar'dan yeni sayaç ekleyebilir veya mevcut olanları görünür yapabilirsiniz.</p>
+          </div>
         )}
 
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto py-8 text-center text-sm border-t border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-black/20">
+      <footer className="mt-auto py-10 text-center text-sm border-t border-black/5 dark:border-white/5 glass">
         <div className="container mx-auto flex flex-col items-center justify-center space-y-4">
-            
-            {/* Visit Counter */}
-            {visitCount !== null && (
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 dark:bg-white/5 text-xs font-mono opacity-70 hover:opacity-100 transition-opacity text-accent">
-                    <ChartIcon />
-                    <span>{visitCount.toLocaleString()} Görüntülenme</span>
-                </div>
-            )}
-
-            <div className="flex flex-col items-center space-y-1">
-                <p className="opacity-70">{settings.school.title}</p>
-                <p className="font-bold text-accent text-base tracking-wide">
-                    Tasarım ve Kodlama: <a href="https://instagram.com/can_akalin" target="_blank" rel="noreferrer" className="hover:underline hover:text-accent-hover transition-colors">Can AKALIN</a>
-                </p>
+          {visitCount !== null && (
+            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-mono opacity-70 hover:opacity-100 transition-opacity text-accent">
+              <ChartIcon />
+              <span>{visitCount.toLocaleString()} Görüntülenme</span>
             </div>
+          )}
+          <div className="flex flex-col items-center space-y-1">
+            <p className="opacity-50">{settings.school.title}</p>
+            <p className="font-bold text-accent text-base tracking-wide">
+              Tasarım ve Kodlama: <a href="https://instagram.com/can_akalin" target="_blank" rel="noreferrer" className="hover:underline hover:text-accent-hover transition-colors">Can AKALIN</a>
+            </p>
+          </div>
         </div>
       </footer>
 
-      {/* Floating Settings Button */}
-      <button 
+      {/* Invisible corner trigger + keyboard hint */}
+      <div
         onClick={() => setIsSettingsOpen(true)}
-        className="fixed bottom-6 left-6 z-30 p-3 rounded-full bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark shadow-xl hover:scale-110 transition-transform duration-300 border border-gray-200 dark:border-gray-700 hover:text-accent"
-        aria-label="Ayarlar"
+        className="fixed top-0 right-0 w-16 h-16 z-30 cursor-pointer group"
+        title="Ayarlar"
       >
-        <SettingsIcon />
-      </button>
+        <div className="w-full h-full flex items-start justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="w-2 h-2 rounded-full bg-accent/60 shadow-[0_0_8px_var(--color-accent)]"></div>
+        </div>
+      </div>
+      <div className="fixed bottom-4 right-4 z-30 text-[10px] opacity-0 hover:opacity-30 transition-opacity text-slate-500 dark:text-white/30 select-none pointer-events-none">
+        Ctrl+Shift+S
+      </div>
 
-      {/* Settings Drawer */}
-      <SettingsPanel 
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        settings={settings}
-        onUpdate={handleUpdateSettings}
-        onReset={handleResetSettings}
-      />
+      <SettingsPanel isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)}
+        settings={settings} onUpdate={handleUpdateSettings} onReset={handleResetSettings} currentYear={CURRENT_YEAR} />
+
+      <NewYearWizard isOpen={showWizard} previousYear={getPreviousAcademicYear(CURRENT_YEAR)} currentYear={CURRENT_YEAR}
+        previousSettings={previousSettings} onAccept={handleWizardAccept} onDecline={handleWizardDecline} />
     </div>
   );
-};
-
-export default App;
+}

@@ -1,5 +1,6 @@
 
 import { AppSettings } from './types';
+import { AcademicYear, getDefaultDatesForYear, getEndYearFromAcademicYear } from './utils/academicYear';
 
 export const THEME_COLORS = {
   blue: { main: '#3b82f6', hover: '#2563eb' },
@@ -10,84 +11,107 @@ export const THEME_COLORS = {
   pink: { main: '#ec4899', hover: '#db2777' },
 };
 
-export const DEFAULT_SETTINGS: AppSettings = {
-  theme: 'dark',
-  color: 'blue',
-  school: {
-    title: 'Aziz Sancar Anadolu Lisesi',
-    subtitle: 'YKS2026 Geri Sayım',
-    description: "Tekirdağ Kapaklı'da yer alan ve adını Nobel ödüllü bilim insanı Prof. Dr. Aziz Sancar'dan alan okulumuz, akademik başarıyı sosyal sorumlulukla harmanlayan bir eğitim vizyonuna sahiptir.",
-    logoUrl: 'https://azizsancaranadolu.meb.k12.tr/meb_iys_dosyalar/59/11/765062/dosyalar/2025_06/04182832_logolar7.png',
-  },
-  socialLinks: [
-    {
-      id: '1',
-      platform: 'website',
-      url: 'https://azizsancaranadolu.meb.k12.tr/',
-      label: 'Web Sitesi',
-      isVisible: true,
-    },
-    {
-      id: '2',
-      platform: 'instagram',
-      url: '@asalkapakli2019',
-      label: 'Instagram',
-      isVisible: true,
-    },
-    {
-      id: '3',
-      platform: 'twitter',
-      url: '@asalkapakli2019',
-      label: 'Twitter/X',
-      isVisible: true,
-    },
-    {
-      id: '4',
-      platform: 'youtube',
-      url: '@AzizSancarAnadoluLisesi',
-      label: 'YouTube',
-      isVisible: true,
-    },
-    {
-      id: '5',
-      platform: 'phone',
-      url: '0282 502 2728',
-      label: 'Telefon',
-      isVisible: true,
-    }
-  ],
-  dates: {
-    title: 'YKS Serüveni İlerleme Durumu',
-    start: '2025-09-01',
-    end: '2026-06-20',
-  },
-  exams: [
-    {
-      id: '1',
-      name: 'TYT',
-      startDate: '2025-09-01',
-      date: '2026-06-20',
-      startTime: '10:15',
-      endTime: '13:00',
-      isVisible: true,
-    },
-    {
-      id: '2',
-      name: 'AYT',
-      startDate: '2025-09-01',
-      date: '2026-06-21',
-      startTime: '10:15',
-      endTime: '13:15',
-      isVisible: true,
-    },
-    {
-      id: '3',
-      name: 'YDT',
-      startDate: '2025-09-01',
-      date: '2026-06-21',
-      startTime: '15:45',
-      endTime: '17:45',
-      isVisible: true,
-    },
-  ],
+// Okul bilgileri ve sosyal medya linkleri yıllar boyunca genelde sabit kalır.
+const DEFAULT_SCHOOL_INFO: AppSettings['school'] = {
+  title: 'Aziz Sancar Anadolu Lisesi',
+  subtitle: 'YKS Geri Sayım',
+  description: "Tekirdağ Kapaklı'da yer alan ve adını Nobel ödüllü bilim insanı Prof. Dr. Aziz Sancar'dan alan okulumuz, akademik başarıyı sosyal sorumlulukla harmanlayan bir eğitim vizyonuna sahiptir.",
+  logoUrl: 'https://azizsancaranadolu.meb.k12.tr/meb_iys_dosyalar/59/11/765062/dosyalar/2025_06/04182832_logolar7.png',
 };
+
+const DEFAULT_SOCIAL_LINKS: AppSettings['socialLinks'] = [
+  {
+    id: '1',
+    platform: 'website',
+    url: 'https://azizsancaranadolu.meb.k12.tr/',
+    label: 'Web Sitesi',
+    isVisible: true,
+  },
+  {
+    id: '2',
+    platform: 'instagram',
+    url: '@asalkapakli2019',
+    label: 'Instagram',
+    isVisible: true,
+  },
+  {
+    id: '3',
+    platform: 'twitter',
+    url: '@asalkapakli2019',
+    label: 'Twitter/X',
+    isVisible: true,
+  },
+  {
+    id: '4',
+    platform: 'youtube',
+    url: '@AzizSancarAnadoluLisesi',
+    label: 'YouTube',
+    isVisible: true,
+  },
+  {
+    id: '5',
+    platform: 'phone',
+    url: '0282 502 2728',
+    label: 'Telefon',
+    isVisible: true,
+  }
+];
+
+/**
+ * Verilen akademik yılına göre varsayılan ayarları üretir.
+ * Sınav tarihleri ve dönem başlangıç/bitiş otomatik hesaplanır.
+ */
+export function getDefaultSettings(year: AcademicYear): AppSettings {
+  const dates = getDefaultDatesForYear(year);
+  const endYear = getEndYearFromAcademicYear(year);
+
+  return {
+    theme: 'dark',
+    color: 'blue',
+    school: {
+      ...DEFAULT_SCHOOL_INFO,
+      subtitle: `YKS${endYear} Geri Sayım`,
+    },
+    socialLinks: DEFAULT_SOCIAL_LINKS,
+    dates: {
+      title: 'YKS Serüveni İlerleme Durumu',
+      start: dates.termStart,
+      end: dates.termEnd,
+    },
+    exams: [
+      {
+        id: '1',
+        name: 'TYT',
+        startDate: dates.termStart,
+        date: dates.tytDate,
+        startTime: '10:15',
+        endTime: '13:00',
+        isVisible: true,
+      },
+      {
+        id: '2',
+        name: 'AYT',
+        startDate: dates.termStart,
+        date: dates.aytDate,
+        startTime: '10:15',
+        endTime: '13:15',
+        isVisible: true,
+      },
+      {
+        id: '3',
+        name: 'YDT',
+        startDate: dates.termStart,
+        date: dates.ydtDate,
+        startTime: '15:45',
+        endTime: '17:45',
+        isVisible: true,
+      },
+    ],
+  };
+}
+
+/**
+ * @deprecated Lütfen getDefaultSettings(year) kullanın.
+ * Geriye uyumluluk için korunmuştur.
+ */
+export const DEFAULT_SETTINGS = getDefaultSettings('2025-2026');
