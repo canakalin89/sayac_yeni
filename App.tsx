@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { AppSettings, SocialPlatform } from './types';
-import { getDefaultSettings, THEME_COLORS } from './constants';
+import { getDefaultSettings, THEME_COLORS, DATA_VERSION } from './constants';
 import SettingsPanel from './components/SettingsPanel';
 import CountdownCard from './components/CountdownCard';
 import ProgressBar from './components/ProgressBar';
@@ -18,35 +18,58 @@ const CURRENT_YEAR = getCurrentAcademicYear();
 
 export default function App() {
   const [settings, setSettings] = useState<AppSettings>(() => {
+    const defaults = getDefaultSettings(CURRENT_YEAR);
+
+    const migrateSettings = (parsed: any): AppSettings => {
+      if (!parsed.socialLinks && parsed.social) {
+        const newSocialLinks = [];
+        let idCounter = 1;
+        if (parsed.social.instagram) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'instagram', url: parsed.social.instagram, label: 'Instagram', isVisible: true });
+        if (parsed.social.twitter) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'twitter', url: parsed.social.twitter, label: 'Twitter/X', isVisible: true });
+        if (parsed.social.youtube) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'youtube', url: parsed.social.youtube, label: 'YouTube', isVisible: true });
+        if (parsed.social.phone) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'phone', url: parsed.social.phone, label: 'Telefon', isVisible: true });
+        newSocialLinks.unshift({ id: (idCounter++).toString(), platform: 'website', url: 'https://azizsancaranadolu.meb.k12.tr/', label: 'Web Sitesi', isVisible: true });
+        parsed.socialLinks = newSocialLinks;
+        delete parsed.social;
+      }
+      if (!Array.isArray(parsed.exams)) parsed.exams = defaults.exams;
+      parsed.exams = parsed.exams.map((exam: any) => ({ ...exam, startDate: exam.startDate || parsed.dates?.start || defaults.dates.start }));
+      if (!Array.isArray(parsed.socialLinks)) parsed.socialLinks = defaults.socialLinks;
+      if (!parsed.color) parsed.color = defaults.color;
+      if (!parsed.dates?.title) { parsed.dates = parsed.dates || {}; parsed.dates.title = defaults.dates.title; }
+
+      // Veri versiyonu kontrolü: eski versiyon ise sınav tarihleri ve schoolOpening güncelle
+      if ((parsed.dataVersion || 0) < DATA_VERSION) {
+        parsed.exams = defaults.exams;
+        parsed.dates = defaults.dates;
+        parsed.schoolOpening = defaults.schoolOpening;
+        parsed.dataVersion = DATA_VERSION;
+      }
+
+      if (!parsed.schoolOpening) {
+        parsed.schoolOpening = defaults.schoolOpening;
+      }
+
+      parsed.academicYear = CURRENT_YEAR;
+      return parsed;
+    };
+
     const legacy = localStorage.getItem(getLegacyStorageKey());
     if (legacy) {
       try {
-        const parsed = JSON.parse(legacy);
-        if (!parsed.socialLinks && parsed.social) {
-          const newSocialLinks = [];
-          let idCounter = 1;
-          if (parsed.social.instagram) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'instagram', url: parsed.social.instagram, label: 'Instagram', isVisible: true });
-          if (parsed.social.twitter) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'twitter', url: parsed.social.twitter, label: 'Twitter/X', isVisible: true });
-          if (parsed.social.youtube) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'youtube', url: parsed.social.youtube, label: 'YouTube', isVisible: true });
-          if (parsed.social.phone) newSocialLinks.push({ id: (idCounter++).toString(), platform: 'phone', url: parsed.social.phone, label: 'Telefon', isVisible: true });
-          newSocialLinks.unshift({ id: (idCounter++).toString(), platform: 'website', url: 'https://azizsancaranadolu.meb.k12.tr/', label: 'Web Sitesi', isVisible: true });
-          parsed.socialLinks = newSocialLinks;
-          delete parsed.social;
-        }
-        if (!Array.isArray(parsed.exams)) parsed.exams = getDefaultSettings(CURRENT_YEAR).exams;
-        parsed.exams = parsed.exams.map((exam: any) => ({ ...exam, startDate: exam.startDate || parsed.dates?.start || getDefaultSettings(CURRENT_YEAR).dates.start }));
-        if (!Array.isArray(parsed.socialLinks)) parsed.socialLinks = getDefaultSettings(CURRENT_YEAR).socialLinks;
-        if (!parsed.color) parsed.color = getDefaultSettings(CURRENT_YEAR).color;
-        if (!parsed.dates?.title) { parsed.dates = parsed.dates || {}; parsed.dates.title = getDefaultSettings(CURRENT_YEAR).dates.title; }
-        parsed.academicYear = CURRENT_YEAR;
+        const parsed = migrateSettings(JSON.parse(legacy));
         localStorage.setItem(getStorageKey(CURRENT_YEAR), JSON.stringify(parsed));
         localStorage.removeItem(getLegacyStorageKey());
         return parsed;
-      } catch { return getDefaultSettings(CURRENT_YEAR); }
+      } catch { return defaults; }
     }
     const saved = localStorage.getItem(getStorageKey(CURRENT_YEAR));
-    if (saved) { try { return JSON.parse(saved); } catch { return getDefaultSettings(CURRENT_YEAR); } }
-    return getDefaultSettings(CURRENT_YEAR);
+    if (saved) {
+      try {
+        return migrateSettings(JSON.parse(saved));
+      } catch { return defaults; }
+    }
+    return defaults;
   });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
