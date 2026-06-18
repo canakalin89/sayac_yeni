@@ -2,6 +2,9 @@
 import { AppSettings } from './types';
 import { AcademicYear, getDefaultDatesForYear, getEndYearFromAcademicYear, getSchoolOpeningDate } from './utils/academicYear';
 
+// Sınav tarihleri değiştiğinde bu versiyonu artır → eski localStorage verileri güncellenir
+export const DATA_VERSION = 2;
+
 export const THEME_COLORS = {
   blue: { main: '#3b82f6', hover: '#2563eb' },
   red: { main: '#ef4444', hover: '#dc2626' },

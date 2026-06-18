@@ -41,6 +41,7 @@ export interface AppSettings {
     date: string; // YYYY-MM-DD
     label: string;
   };
+  dataVersion?: number;
   academicYear?: string;
 }
 
