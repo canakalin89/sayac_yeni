@@ -7,9 +7,10 @@ interface CountdownCardProps {
   date: string;
   startTime: string;
   endTime: string;
+  hideEstimatedNote?: boolean;
 }
 
-export default function CountdownCard({ title, startDate, date, startTime, endTime }: CountdownCardProps) {
+export default function CountdownCard({ title, startDate, date, startTime, endTime, hideEstimatedNote }: CountdownCardProps) {
   const calculateTimeLeft = useCallback((): TimeLeft => {
     const targetDateTime = new Date(`${date}T${startTime}:00`).getTime();
     const now = new Date().getTime();
@@ -62,10 +63,12 @@ export default function CountdownCard({ title, startDate, date, startTime, endTi
                 <span className="opacity-30">•</span>
                 <span>{startTime}</span>
               </div>
-              <div className="text-[10px] opacity-30 mt-1">
-                <span>Tahmini tarihtir. </span>
-                <a href="https://www.osym.gov.tr/TR,9493/sinav-takvimi.html" target="_blank" rel="noreferrer" className="underline hover:text-accent transition-colors">Resmi ÖSYM takvimi →</a>
-              </div>
+              {!hideEstimatedNote && (
+                <div className="text-[10px] opacity-30 mt-1">
+                  <span>Tahmini tarihtir. </span>
+                  <a href="https://www.osym.gov.tr/TR,9493/sinav-takvimi.html" target="_blank" rel="noreferrer" className="underline hover:text-accent transition-colors">Resmi ÖSYM takvimi →</a>
+                </div>
+              )}
             </div>
             {timeLeft.isCompleted && (
               <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-bold border border-green-500/20">TAMAMLANDI</span>
