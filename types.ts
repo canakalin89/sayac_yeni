@@ -37,11 +37,10 @@ export interface AppSettings {
     end: string; // YYYY-MM-DD
   };
   exams: ExamConfig[];
-  /**
-   * Hangi akademik yılına ait olduğu.
-   * Örn: "2025-2026"
-   * Eski verilerde bu alan olmayabilir.
-   */
+  schoolOpening?: {
+    date: string; // YYYY-MM-DD
+    label: string;
+  };
   academicYear?: string;
 }
 

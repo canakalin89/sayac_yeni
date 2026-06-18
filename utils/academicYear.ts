@@ -14,8 +14,10 @@ export function getCurrentAcademicYear(): AcademicYear {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth(); // 0-indexed: 0=Ocak, 8=Eylül
+  const day = now.getDate();
 
-  if (month >= 8) {
+  // Eylül ortasından (15+) sonrası yeni akademik yıl
+  if (month > 8 || (month === 8 && day >= 15)) {
     return `${year}-${year + 1}`;
   }
   return `${year - 1}-${year}`;
@@ -87,6 +89,12 @@ export function getThirdSaturdayOfJune(year: number): string {
   return `${year}-06-${String(saturdayDate).padStart(2, '0')}`;
 }
 
+// Bilinen sınav tarihleri (ÖSYM takviminden)
+const KNOWN_EXAM_DATES: Record<string, { tyt: string; ayt: string; ydt: string; ydtSameAsAyt: boolean }> = {
+  '2025-2026': { tyt: '2026-06-20', ayt: '2026-06-21', ydt: '2026-06-22', ydtSameAsAyt: false },
+  '2026-2027': { tyt: '2027-06-19', ayt: '2027-06-20', ydt: '2027-06-20', ydtSameAsAyt: true },
+};
+
 /**
  * Verilen akademik yıl için varsayılan sınav tarihlerini üretir.
  */
@@ -94,14 +102,23 @@ export function getDefaultDatesForYear(year: AcademicYear) {
   const startYear = getStartYearFromAcademicYear(year);
   const endYear = getEndYearFromAcademicYear(year);
 
-  const tytDate = getThirdSaturdayOfJune(endYear);
+  const known = KNOWN_EXAM_DATES[year];
+  if (known) {
+    return {
+      termStart: `${startYear}-09-01`,
+      termEnd: known.tyt,
+      tytDate: known.tyt,
+      aytDate: known.ayt,
+      ydtDate: known.ydt,
+    };
+  }
 
-  // TYT tarihini Date objesine çevir ve AYT/YDT için +1 ve +2 gün ekle
+  const tytDate = getThirdSaturdayOfJune(endYear);
   const tytDateObj = new Date(tytDate);
   const aytDateObj = new Date(tytDateObj);
   aytDateObj.setDate(aytDateObj.getDate() + 1);
   const ydtDateObj = new Date(tytDateObj);
-  ydtDateObj.setDate(ydtDateObj.getDate() + 2);
+  ydtDateObj.setDate(ydtDateObj.getDate() + 1);
 
   const toDateStr = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -113,6 +130,18 @@ export function getDefaultDatesForYear(year: AcademicYear) {
     aytDate: toDateStr(aytDateObj),
     ydtDate: toDateStr(ydtDateObj),
   };
+}
+
+/**
+ * Verilen akademik yıl için okulların açılış tarihini döndürür.
+ */
+export function getSchoolOpeningDate(year: AcademicYear): string {
+  const endYear = getEndYearFromAcademicYear(year);
+  // Varsayılan: Eylül ortası
+  const KNOWN_OPENING_DATES: Record<string, string> = {
+    '2025-2026': '2026-09-14',
+  };
+  return KNOWN_OPENING_DATES[year] || `${endYear}-09-15`;
 }
 
 /**

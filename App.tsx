@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { AppSettings, SocialPlatform } from './types';
 import { getDefaultSettings, THEME_COLORS } from './constants';
 import SettingsPanel from './components/SettingsPanel';
@@ -7,6 +7,7 @@ import ProgressBar from './components/ProgressBar';
 import NewYearWizard from './components/NewYearWizard';
 import {
   getCurrentAcademicYear,
+  getNextAcademicYear,
   getStorageKey,
   getLegacyStorageKey,
   getPreviousAcademicYear,
@@ -108,6 +109,46 @@ export default function App() {
   const visibleExams = settings.exams.filter(exam => exam.isVisible);
   const visibleLinks = settings.socialLinks.filter(link => link.isVisible);
 
+  // Faz tespiti: sınavlar aktif / okulların açılışı / sonraki yıl
+  const [phase, setPhase] = useState<'exams' | 'school-opening'>('exams');
+  const [nextYearSettings, setNextYearSettings] = useState<AppSettings | null>(null);
+
+  useEffect(() => {
+    const checkPhase = () => {
+      const now = Date.now();
+      const allExamsDone = settings.exams.length > 0 && settings.exams.every(exam => {
+        const endTime = new Date(`${exam.date}T${exam.endTime}:00`).getTime();
+        return now > endTime;
+      });
+
+      if (allExamsDone && settings.schoolOpening?.date) {
+        const schoolOpeningTime = new Date(`${settings.schoolOpening.date}T08:00:00`).getTime();
+        if (now < schoolOpeningTime) {
+          setPhase('school-opening');
+          return;
+        }
+        // Okul açıldıysa, sonraki yılın ayarlarını yükle
+        const nextYear = getNextAcademicYear(CURRENT_YEAR);
+        const nextSaved = localStorage.getItem(getStorageKey(nextYear));
+        const nextSettings = nextSaved ? JSON.parse(nextSaved) : getDefaultSettings(nextYear);
+        setNextYearSettings(nextSettings);
+        setPhase('exams');
+        return;
+      }
+      setPhase('exams');
+    };
+    checkPhase();
+    const timer = setInterval(checkPhase, 60000);
+    return () => clearInterval(timer);
+  }, [settings.exams, settings.schoolOpening]);
+
+  const displayExams = useMemo(() => {
+    if (phase === 'exams' && nextYearSettings) {
+      return nextYearSettings.exams.filter(e => e.isVisible);
+    }
+    return visibleExams;
+  }, [phase, nextYearSettings, visibleExams]);
+
   const getIcon = (platform: SocialPlatform) => {
     switch (platform) {
       case 'instagram': return <InstagramIcon />;
@@ -160,7 +201,9 @@ export default function App() {
               {settings.school.title}
             </h1>
             <p className="text-2xl md:text-4xl font-bold mb-4 opacity-90 bg-clip-text text-transparent bg-gradient-to-r from-accent to-purple-500">
-              {settings.school.subtitle}
+              {phase === 'school-opening'
+                ? `${settings.schoolOpening?.label || 'Okulların Açılışı'} Geri Sayım`
+                : (nextYearSettings ? nextYearSettings.school.subtitle : settings.school.subtitle)}
             </p>
             <p className="text-sm md:text-base max-w-xl opacity-60 leading-relaxed mb-10">
               {settings.school.description}
@@ -183,27 +226,59 @@ export default function App() {
       {/* Main Content */}
       <main className="container mx-auto max-w-6xl px-4 -mt-6 relative z-20 pb-24">
 
-        <ProgressBar title={settings.dates.title} startDate={settings.dates.start} endDate={settings.dates.end} />
-
-        {visibleExams.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
-            {visibleExams.map((exam, index) => (
-              <div key={exam.id} className="h-full" style={{ animationDelay: `${index * 100}ms` }}>
-                <CountdownCard
-                  title={exam.name}
-                  startDate={exam.startDate}
-                  date={exam.date}
-                  startTime={exam.startTime}
-                  endTime={exam.endTime}
-                />
-              </div>
-            ))}
-          </div>
+        {phase === 'school-opening' && settings.schoolOpening ? (
+          <>
+            <ProgressBar
+              title="Yaz Tatili İlerleme Durumu"
+              startDate={settings.exams.reduce((latest, exam) => {
+                const d = `${exam.date}T${exam.endTime}:00`;
+                return d > latest ? d : latest;
+              }, '').split('T')[0]}
+              endDate={settings.schoolOpening.date}
+            />
+            <div className="max-w-lg mx-auto">
+              <CountdownCard
+                title={settings.schoolOpening.label}
+                startDate={settings.exams.reduce((latest, exam) => {
+                  const d = exam.date;
+                  return d > latest ? d : latest;
+                }, '')}
+                date={settings.schoolOpening.date}
+                startTime="08:00"
+                endTime="17:00"
+                hideEstimatedNote
+              />
+            </div>
+          </>
         ) : (
-          <div className="text-center py-20 opacity-50 glass rounded-2xl">
-            <p className="text-lg">Gösterilecek sayaç bulunamadı.</p>
-            <p className="text-sm mt-2 opacity-70">Ayarlar'dan yeni sayaç ekleyebilir veya mevcut olanları görünür yapabilirsiniz.</p>
-          </div>
+          <>
+            <ProgressBar
+              title={nextYearSettings ? nextYearSettings.dates.title : settings.dates.title}
+              startDate={nextYearSettings ? nextYearSettings.dates.start : settings.dates.start}
+              endDate={nextYearSettings ? nextYearSettings.dates.end : settings.dates.end}
+            />
+
+            {displayExams.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+                {displayExams.map((exam, index) => (
+                  <div key={exam.id} className="h-full" style={{ animationDelay: `${index * 100}ms` }}>
+                    <CountdownCard
+                      title={exam.name}
+                      startDate={exam.startDate}
+                      date={exam.date}
+                      startTime={exam.startTime}
+                      endTime={exam.endTime}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 opacity-50 glass rounded-2xl">
+                <p className="text-lg">Gösterilecek sayaç bulunamadı.</p>
+                <p className="text-sm mt-2 opacity-70">Ayarlar'dan yeni sayaç ekleyebilir veya mevcut olanları görünür yapabilirsiniz.</p>
+              </div>
+            )}
+          </>
         )}
 
       </main>

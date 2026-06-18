@@ -1,6 +1,6 @@
 
 import { AppSettings } from './types';
-import { AcademicYear, getDefaultDatesForYear, getEndYearFromAcademicYear } from './utils/academicYear';
+import { AcademicYear, getDefaultDatesForYear, getEndYearFromAcademicYear, getSchoolOpeningDate } from './utils/academicYear';
 
 export const THEME_COLORS = {
   blue: { main: '#3b82f6', hover: '#2563eb' },
@@ -65,6 +65,21 @@ export function getDefaultSettings(year: AcademicYear): AppSettings {
   const dates = getDefaultDatesForYear(year);
   const endYear = getEndYearFromAcademicYear(year);
 
+  const KNOWN_EXAM_TIMES: Record<string, { tyt: string[]; ayt: string[]; ydt: string[] }> = {
+    '2025-2026': {
+      tyt: ['10:15', '13:00'],
+      ayt: ['10:15', '13:15'],
+      ydt: ['15:45', '17:45'],
+    },
+    '2026-2027': {
+      tyt: ['10:15', '13:00'],
+      ayt: ['10:15', '13:15'],
+      ydt: ['15:45', '17:45'],
+    },
+  };
+
+  const times = KNOWN_EXAM_TIMES[year] || KNOWN_EXAM_TIMES['2025-2026'];
+
   return {
     theme: 'dark',
     color: 'blue',
@@ -84,8 +99,8 @@ export function getDefaultSettings(year: AcademicYear): AppSettings {
         name: 'TYT',
         startDate: dates.termStart,
         date: dates.tytDate,
-        startTime: '10:15',
-        endTime: '13:00',
+        startTime: times.tyt[0],
+        endTime: times.tyt[1],
         isVisible: true,
       },
       {
@@ -93,8 +108,8 @@ export function getDefaultSettings(year: AcademicYear): AppSettings {
         name: 'AYT',
         startDate: dates.termStart,
         date: dates.aytDate,
-        startTime: '10:15',
-        endTime: '13:15',
+        startTime: times.ayt[0],
+        endTime: times.ayt[1],
         isVisible: true,
       },
       {
@@ -102,11 +117,15 @@ export function getDefaultSettings(year: AcademicYear): AppSettings {
         name: 'YDT',
         startDate: dates.termStart,
         date: dates.ydtDate,
-        startTime: '15:45',
-        endTime: '17:45',
+        startTime: times.ydt[0],
+        endTime: times.ydt[1],
         isVisible: true,
       },
     ],
+    schoolOpening: {
+      date: getSchoolOpeningDate(year),
+      label: 'Okulların Açılışı',
+    },
   };
 }
 
