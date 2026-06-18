@@ -91,7 +91,7 @@ export function getThirdSaturdayOfJune(year: number): string {
 
 // Bilinen sınav tarihleri (ÖSYM takviminden)
 const KNOWN_EXAM_DATES: Record<string, { tyt: string; ayt: string; ydt: string; ydtSameAsAyt: boolean }> = {
-  '2025-2026': { tyt: '2026-06-20', ayt: '2026-06-21', ydt: '2026-06-22', ydtSameAsAyt: false },
+  '2025-2026': { tyt: '2026-06-20', ayt: '2026-06-21', ydt: '2026-06-21', ydtSameAsAyt: true },
   '2026-2027': { tyt: '2027-06-19', ayt: '2027-06-20', ydt: '2027-06-20', ydtSameAsAyt: true },
 };
 
