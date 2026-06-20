@@ -8,6 +8,7 @@ import NewYearWizard from './components/NewYearWizard';
 import {
   getCurrentAcademicYear,
   getNextAcademicYear,
+  getEndYearFromAcademicYear,
   getStorageKey,
   getLegacyStorageKey,
   getPreviousAcademicYear,
@@ -226,7 +227,7 @@ export default function App() {
             <p className="text-2xl md:text-4xl font-bold mb-4 opacity-90 bg-clip-text text-transparent bg-gradient-to-r from-accent to-purple-500">
               {phase === 'school-opening'
                 ? `${settings.schoolOpening?.label || 'Okulların Açılışı'} Geri Sayım`
-                : (nextYearSettings ? nextYearSettings.school.subtitle : settings.school.subtitle)}
+                : `YKS${getEndYearFromAcademicYear(nextYearSettings ? getNextAcademicYear(CURRENT_YEAR) : CURRENT_YEAR)} Geri Sayım`}
             </p>
             <p className="text-sm md:text-base max-w-xl opacity-60 leading-relaxed mb-10">
               {settings.school.description}
