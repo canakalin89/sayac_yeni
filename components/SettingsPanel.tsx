@@ -459,7 +459,9 @@ export default function SettingsPanel({
               <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-700 dark:text-yellow-300">
                 <p className="font-medium mb-1">⚠️ Önemli Not</p>
                 <p className="opacity-80">
-                  Aşağıdaki sınav tarihleri ÖSYM'nin geçmiş yıllardaki takvimine göre otomatik hesaplanmış <strong>tahmini</strong> tarihlerdir.
+                  2027 YKS tarihleri ÖSYM tarafından açıklanmıştır: TYT 19 Haziran, AYT ve YDT 20 Haziran 2027.{' '}
+                  <a href="https://www.osym.gov.tr/yks-19-20-haziran-2027de-yapilacak" target="_blank" rel="noreferrer" className="underline hover:text-accent">Resmi 2027 duyurusu</a>.{' '}
+                  Henüz açıklanmayan yıllar için otomatik hesaplanan tarihler <strong>tahminidir</strong>. Elle değiştirdiğiniz tarihleri ayrıca doğrulayınız.{' '}
                   Kesin tarihler için lütfen <a href="https://www.osym.gov.tr/TR,9493/sinav-takvimi.html" target="_blank" rel="noreferrer" className="underline hover:text-accent">resmi ÖSYM takvimini</a> kontrol ediniz.
                 </p>
               </div>

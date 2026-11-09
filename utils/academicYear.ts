@@ -95,6 +95,18 @@ const KNOWN_EXAM_DATES: Record<string, { tyt: string; ayt: string; ydt: string; 
   '2026-2027': { tyt: '2027-06-19', ayt: '2027-06-20', ydt: '2027-06-20', ydtSameAsAyt: true },
 };
 
+export const OSYM_2027_SOURCE = 'https://www.osym.gov.tr/yks-19-20-haziran-2027de-yapilacak';
+
+/** Only exact exam/date matches are official; user-edited dates remain unconfirmed. */
+export function getOfficialExamDateSource(name: string, date: string): string | undefined {
+  const exam = name.trim().toLowerCase();
+  if (exam !== 'tyt' && exam !== 'ayt' && exam !== 'ydt') return undefined;
+  const year = Number(date.slice(0, 4));
+  const known = KNOWN_EXAM_DATES[`${year - 1}-${year}`];
+  if (!known || known[exam] !== date) return undefined;
+  return year === 2027 ? OSYM_2027_SOURCE : 'https://www.osym.gov.tr/TR,9493/sinav-takvimi.html';
+}
+
 /**
  * Verilen akademik yıl için varsayılan sınav tarihlerini üretir.
  */

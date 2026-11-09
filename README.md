@@ -107,7 +107,7 @@ Ayarlar butonu ekranda **görünmez**. Paneli açmak için iki yöntem vardır:
     *   **Tüm Tarihleri +1 Yıl Kaydır:** Mevcut tüm sınav ve dönem tarihlerini bir yıl ileri alır.
     *   **Önceki Yıl Ayarlarını Kopyala:** `localStorage`'dan bir önceki akademik yılın verilerini çeker, okul bilgilerini korur ve sınav tarihlerini günceller.
 
-> ⚠️ **ÖSYM Uyarısı:** Sınav tarihleri, ÖSYM'nin geçmiş yıllardaki takvimine göre otomatik hesaplanmış **tahmini** tarihlerdir. Kesin tarihler için lütfen [resmi ÖSYM takvimini](https://www.osym.gov.tr/TR,9493/sinav-takvimi.html) kontrol ediniz.
+> ⚠️ **ÖSYM Uyarısı:** 2027 YKS tarihleri [ÖSYM tarafından açıklanmıştır](https://www.osym.gov.tr/yks-19-20-haziran-2027de-yapilacak): TYT 19 Haziran, AYT ve YDT 20 Haziran 2027. Resmî tarihle eşleşen TYT, AYT ve YDT sayaçları kaynak bağlantısıyla gösterilir. Henüz açıklanmayan yıllar için otomatik hesaplanan tarihler **tahminidir**. Elle değiştirilen tarihler ayrıca doğrulanmalıdır. Kesin tarihler için lütfen [resmi ÖSYM takvimini](https://www.osym.gov.tr/TR,9493/sinav-takvimi.html) kontrol ediniz.
 
 ### 🔄 Yıllık Kullanım ve Geçiş
 

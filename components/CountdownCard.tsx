@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { TimeLeft } from '../types';
+import { getOfficialExamDateSource } from '../utils/academicYear';
 
 interface CountdownCardProps {
   title: string;
@@ -11,6 +12,7 @@ interface CountdownCardProps {
 }
 
 export default function CountdownCard({ title, startDate, date, startTime, endTime, hideEstimatedNote }: CountdownCardProps) {
+  const officialDateSource = getOfficialExamDateSource(title, date);
   const calculateTimeLeft = useCallback((): TimeLeft => {
     const targetDateTime = new Date(`${date}T${startTime}:00`).getTime();
     const now = new Date().getTime();
@@ -65,8 +67,8 @@ export default function CountdownCard({ title, startDate, date, startTime, endTi
               </div>
               {!hideEstimatedNote && (
                 <div className="text-[10px] opacity-30 mt-1">
-                  <span>Tahmini tarihtir. </span>
-                  <a href="https://www.osym.gov.tr/TR,9493/sinav-takvimi.html" target="_blank" rel="noreferrer" className="underline hover:text-accent transition-colors">Resmi ÖSYM takvimi →</a>
+                  <span>{officialDateSource ? 'ÖSYM tarafından açıklanan tarihtir. ' : 'Tahmini tarihtir. '}</span>
+                  <a href={officialDateSource || "https://www.osym.gov.tr/TR,9493/sinav-takvimi.html"} target="_blank" rel="noreferrer" className="underline hover:text-accent transition-colors">{officialDateSource ? 'Resmi ÖSYM kaynağı →' : 'Resmi ÖSYM takvimi →'}</a>
                 </div>
               )}
             </div>
